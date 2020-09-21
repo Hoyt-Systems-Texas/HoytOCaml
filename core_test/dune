@@ -1,5 +1,5 @@
 (library
  (name HoytCore_Test)
  (inline_tests)
- (libraries ounit2 HoytCore)
+ (libraries HoytCore)
  (preprocess (pps ppx_jane)))
