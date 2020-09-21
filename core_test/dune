@@ -1,0 +1,3 @@
+(tests
+ (names ValidationTest)
+ (libraries ounit2 HoytCore))

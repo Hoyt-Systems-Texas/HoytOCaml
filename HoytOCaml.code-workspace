@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "core"
+		},
+		{
+			"path": "core_test"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"ocaml.sandbox": {
+			"kind": "opam",
+			"switch": "/home/mrh0057/GitProjects/OCaml/HoytOcaml"
+		}
+	}
+}
