@@ -36,3 +36,35 @@ let%test_unit "Max length test" =
     } in
     let errors = StringValidation.validation v "12345678901" in
     [%test_eq: error list] [MaxLength(10)] errors
+
+let%test_unit "Int min value test" =
+    let v = {
+        IntValidation.minValue = 1;
+        maxValue = 10;
+    } in
+    let errors = IntValidation.validation v 0 in
+    [%test_eq: error list] [MinValue(1)] errors
+
+let%test_unit "Int max value test" =
+    let v = {
+        IntValidation.minValue = 1;
+        maxValue = 10;
+    } in
+    let errors = IntValidation.validation v 11 in
+    [%test_eq: error list] [MaxValue(10)] errors
+
+let%test_unit "Int correct test" =
+    let v = {
+        IntValidation.minValue = 1;
+        maxValue = 10;
+    } in
+    let errors = IntValidation.validation v 10 in
+    [%test_eq: error list] [] errors
+
+let%test_unit "Int correct test2" =
+    let v = {
+        IntValidation.minValue = 1;
+        maxValue = 10;
+    } in
+    let errors = IntValidation.validation v 1 in
+    [%test_eq: error list] [] errors

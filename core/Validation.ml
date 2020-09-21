@@ -15,7 +15,7 @@ module StringValidation = struct
         required: bool;
         minLength: int;
         maxLength: int;
-    }
+    }  [@@deriving sexp_of, compare]
 
     let validation t value =
         let v = String.strip value in
@@ -39,7 +39,8 @@ module IntValidation = struct
     type t = {
         minValue: int;
         maxValue: int;
-    }
+    }  [@@deriving sexp_of, compare]
+
     let validation t v =
         let errors = if t.minValue > v then
             [MinValue t.minValue]

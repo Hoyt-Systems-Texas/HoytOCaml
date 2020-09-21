@@ -14,7 +14,7 @@ module StringValidation : sig
         required: bool;
         minLength: int;
         maxLength: int;
-    }
+    } [@@deriving sexp_of, compare]
 
     val validation : t -> string -> errors
 end
@@ -23,7 +23,7 @@ module IntValidation : sig
     type t = {
         minValue: int;
         maxValue: int;
-    }
+    } [@@deriving sexp_of, compare]
 
     val validation : t -> int -> errors
 end
