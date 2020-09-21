@@ -1,3 +1,5 @@
-(tests
- (names ValidationTest)
- (libraries ounit2 HoytCore))
+(library
+ (name HoytCore_Test)
+ (inline_tests)
+ (libraries ounit2 HoytCore)
+ (preprocess (pps ppx_jane)))
