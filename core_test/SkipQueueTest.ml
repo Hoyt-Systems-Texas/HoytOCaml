@@ -1,5 +1,5 @@
 open Core
-open HoytCore.SkipQueue
+open HoytCore
 
 let%test_unit "Skip queue test 1" =
     let queue = SkipQueue.make () in

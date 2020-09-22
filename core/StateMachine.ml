@@ -1,4 +1,5 @@
 open Core
+open Lwt.Infix
 
 module type StateMachine = sig
     type context
@@ -43,26 +44,47 @@ module Persisted(M: StateMachine) = struct
     type t = {
         state: M.state ref;
         ctx: M.context ref;
-        queue: request Queue.t;
+        queue: request SkipQueue.t;
         activeState: runState ref;
     }
+
+    let handleEvent t event resolve =
+        match M.whatAction !(t.state) event with
+        | Defer -> SkipQueue.defer t.queue {event; resolve}
+        | ChangeState state -> 
+            let currentState = !(t.state) in
+            let ctx = !(t.ctx) in
+            let result = M.stateChange (M.Entry currentState) ctx event in 
+            result >>= (fun ctx -> 
+                let ctxRef = t.ctx in
+                ctxRef := ctx;
+                M.stateChange (M.Exit state) ctx event)
+            |> Lwt.ignore_result
+        | Action _ ->
+            ()
+        | Ignore ->
+            Lwt.wakeup resolve !(t.ctx);
+            ()
+
 
     let eventLoop t =
         if compare_runState !(t.activeState) Idle = 0 then
             let s = t.activeState in s := Running;
             let rec loop _ =
-                match Queue.dequeue t.queue with
-                | Some(_) ->
-                    loop ()
-                | None -> ()
-                in 
-                loop ()
+                match SkipQueue.dequeue t.queue with
+                | Some{event; resolve} ->
+                    handleEvent t event resolve;
+                    loop ();
+                | None -> 
+                    let s = t.activeState in s := Idle;
+                    ()
+                in loop ()
         else 
             ()
 
     let send t event =
         let (promise, resolve) = Lwt.wait () in
-        Queue.enqueue t.queue {
+        SkipQueue.enqueue t.queue {
             event; 
             resolve;
         };
@@ -74,4 +96,5 @@ module Persisted(M: StateMachine) = struct
 
     let getState t =
         !(t.state)
+
 end
