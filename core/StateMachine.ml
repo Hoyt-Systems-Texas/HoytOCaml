@@ -66,6 +66,7 @@ module Make_persisted(M: StateMachine) = struct
                 ctxRef := ctx;
                 M.stateChange (M.Entry state) ctx event)
             >>= (fun ctx ->
+                SkipQueue.reset t.queue;
                 let s = t.state in s := state;
                 let c = t.ctx in c := ctx;
                 Lwt.wakeup resolve ctx;
