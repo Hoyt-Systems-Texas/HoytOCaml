@@ -2,4 +2,4 @@
  (name HoytCore_Test)
  (inline_tests)
  (libraries HoytCore)
- (preprocess (pps ppx_jane)))
+ (preprocess (pps ppx_jane ppx_inline_test ppx_compare)))
