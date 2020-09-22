@@ -6,11 +6,9 @@ module type StateMachine = sig
     type event
     type state
 
-
     type stateChangeType =
         | Entry of state
         | Exit of state
-
 
     type result =
         | Ran of context
@@ -29,7 +27,7 @@ module type StateMachine = sig
 
 end
 
-module Persisted(M: StateMachine) = struct
+module Make_persisted(M: StateMachine) = struct
 
     type runState = 
         | Idle
@@ -48,20 +46,39 @@ module Persisted(M: StateMachine) = struct
         activeState: runState ref;
     }
 
+    let make state ctx = 
+        {
+            state = ref state;
+            ctx = ref ctx;
+            queue = SkipQueue.make ();
+            activeState = ref Idle;
+        }
+
     let handleEvent t event resolve =
         match M.whatAction !(t.state) event with
         | Defer -> SkipQueue.defer t.queue {event; resolve}
         | ChangeState state -> 
             let currentState = !(t.state) in
             let ctx = !(t.ctx) in
-            let result = M.stateChange (M.Entry currentState) ctx event in 
+            let result = M.stateChange (M.Exit currentState) ctx event in 
             result >>= (fun ctx -> 
                 let ctxRef = t.ctx in
                 ctxRef := ctx;
-                M.stateChange (M.Exit state) ctx event)
+                M.stateChange (M.Entry state) ctx event)
+            >>= (fun ctx ->
+                let s = t.state in s := state;
+                let c = t.ctx in c := ctx;
+                Lwt.wakeup resolve ctx;
+                Lwt.return ctx)
             |> Lwt.ignore_result
-        | Action _ ->
-            ()
+        | Action act ->
+            act !(t.ctx) event >>= (fun ctx ->
+                let c = t.ctx in c := ctx;
+                Lwt.return ctx)
+                >>= (fun ctx ->
+                    Lwt.wakeup resolve ctx;
+                    Lwt.return_unit)
+                |> Lwt.ignore_result
         | Ignore ->
             Lwt.wakeup resolve !(t.ctx);
             ()

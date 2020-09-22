@@ -26,7 +26,7 @@ module type StateMachine = sig
 
 end
 
-module Persisted(M: StateMachine) : sig
+module Make_persisted(M: StateMachine) : sig
 
     type t
 
@@ -35,5 +35,7 @@ module Persisted(M: StateMachine) : sig
     val getCtx : t -> M.context
 
     val getState : t -> M.state
+
+    val make : M.state -> M.context -> t
 
 end
