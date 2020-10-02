@@ -1,0 +1,5 @@
+(library
+ (name HoytMessaging_Test)
+ (inline_tests)
+ (libraries core lwt zmq zmq-lwt)
+ (preprocess (pps ppx_jane ppx_inline_test ppx_compare)))

@@ -1,0 +1,4 @@
+(library
+ (name HoytMessaging)
+ (libraries core zmq zmq-lwt)
+ (preprocess (pps ppx_jane ppx_compare)))
