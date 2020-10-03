@@ -3,52 +3,52 @@
 *)
 type t
 (* The type for the service id. *)
-type serviceId = int32
+type service_id = int32
 (* The host id. *)
-type hostId = int32
+type host_id = int32
 
-module RpcEntry : sig
+module Rpc_entry : sig
     (* The entry for a host. *)
     type t = {
-        pusSocket: string;
+        push_socket: string;
     }
 end
 
-module SubscribeEntry : sig
+module Subscribe_entry : sig
 
     (* An entry for a subscription. *)
     type t = {
         (* The location for the subscribtion in a socket.*)
-        subSocket: string;
+        sub_socket: string;
         (* The push socket for to send heartbeat request to. *)
-        pushSocket: string;
+        push_socket: string;
     }
 
 end
 
-module HostEntry : sig
+module Host_entry : sig
     (* Represents a host entry.*)
     type t =
         (* Reprsents a rpc entry. *)
-        | Rpc of RpcEntry.t
+        | Rpc of Rpc_entry.t
         (* The host you can subscribe. *)
-        | Subscription of SubscribeEntry.t
+        | Subscription of Subscribe_entry.t
 end
 
-module ServiceEntry : sig
+module Service_entry : sig
 
     (* Represents the service entries. *)
     type t = {
         (* The id of the service the entry is for. *)
-        serviceId: int32;
+        service_id: int32;
         (* The list of hosts for the service. *)
-        hosts: HostEntry.t list;
+        hosts: Host_entry.t list;
     }
 
 end
 
 (* Used to make a new collection. *)
-val make : hostId -> t
+val make : host_id -> t
 
 (* Gets the id of the service. *)
-val getServiceId : t -> serviceId -> ServiceEntry.t option
+val get_service_id : t -> service_id -> Service_entry.t option

@@ -1,42 +1,42 @@
-module type SubscriberInfo = sig
+module type Subscriber_info = sig
     type encoding = string
     type header
 
     (* Used to deserialize a header. *)
-    val decodeHeader : encoding -> header
+    val decode_header : encoding -> header option
 
     (* Creates a message for send a ping. *)
     val ping : int64 -> encoding
 
     (* The handler for the incoming message. *)
-    val handleMessage : header -> encoding -> unit
+    val handle_message : header -> encoding -> unit
 
 end
 
 (* Used to create something to handle a subscriber.*)
-module Make_SubscriberInfoZeromq(S: SubscriberInfo) = struct
+module Make_Subscriber_info_zeromq(S: Subscriber_info) = struct
     type t = {
-        serverId: int32;
-        serviceId: int32;
-        hosts: HostManager.t;
+        server_id: int32;
+        service_id: int32;
+        hosts: Host_manager.t;
     }
 
-    let make serverId serviceId hosts =
+    let make server_id service_id hosts =
         {
-            serverId=serverId;
+            server_id=server_id;
             hosts=hosts;
-            serviceId=serviceId;
+            service_id=service_id;
         }
 
     let listen t =
-        let service = HostManager.getServiceId t.hosts t.serviceId in
+        let service = Host_manager.get_service_id t.hosts t.service_id in
         match service with
         | Some s -> (
             let service = List.fold_left (fun found s -> 
                 match found with
                 | Some s -> Some s
                 | None -> (match s with
-                    | HostManager.HostEntry.Subscription s -> Some s
+                    | Host_manager.Host_entry.Subscription s -> Some s
                     | _ -> None
                 )) None s.hosts in
             match service with
