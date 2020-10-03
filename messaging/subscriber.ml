@@ -31,18 +31,7 @@ module Make_Subscriber_info_zeromq(S: Subscriber_info) = struct
     let listen t =
         let service = Host_manager.get_service_id t.hosts t.service_id in
         match service with
-        | Some s -> (
-            let service = List.fold_left (fun found s -> 
-                match found with
-                | Some s -> Some s
-                | None -> (match s with
-                    | Host_manager.Host_entry.Subscription s -> Some s
-                    | _ -> None
-                )) None s.hosts in
-            match service with
-            | Some _ -> ()
-            | None -> ()
-        )
+        | Some _ -> ()
         | None -> ()
 
 end

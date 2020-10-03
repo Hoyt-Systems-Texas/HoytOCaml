@@ -7,32 +7,16 @@ type service_id = int32
 (* The host id. *)
 type host_id = int32
 
-module Rpc_entry : sig
-    (* The entry for a host. *)
-    type t = {
-        push_socket: string;
-    }
-end
-
-module Subscribe_entry : sig
+module Host_entry : sig
 
     (* An entry for a subscription. *)
     type t = {
         (* The location for the subscribtion in a socket.*)
         sub_socket: string;
-        (* The push socket for to send heartbeat request to. *)
+        (* The push socket for to sending rpc and heartbeat request to. *)
         push_socket: string;
     }
 
-end
-
-module Host_entry : sig
-    (* Represents a host entry.*)
-    type t =
-        (* Reprsents a rpc entry. *)
-        | Rpc of Rpc_entry.t
-        (* The host you can subscribe. *)
-        | Subscription of Subscribe_entry.t
 end
 
 module Service_entry : sig

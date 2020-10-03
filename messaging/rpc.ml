@@ -51,9 +51,9 @@ module Make_Request_processor(R: Request_processor) = struct
                     match (R.decode_header msg, Zmq.Socket.has_more socket) with
                     | (Some header, true) -> Zmq_lwt.Socket.recv socket_lwt
                         >>= fun msg -> R.handle_message header msg
-                        >>= fun _ -> Lwt.return_unit
+                        >>= fun (_,_) -> Lwt.return_unit
                     | _ -> Lwt.return_unit)
-                >>= fun _ -> handler_loop () in
+                >>= fun _ -> (handler_loop [@tailcall]) () in
             handler_loop ()
         | Running -> Lwt.return_unit
 
