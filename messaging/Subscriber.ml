@@ -17,14 +17,32 @@ end
 module Make_SubscriberInfoZeromq(S: SubscriberInfo) = struct
     type t = {
         serverId: int32;
+        serviceId: int32;
         hosts: HostManager.t;
     }
 
-    let make hosts =
+    let make serverId serviceId hosts =
         {
-            serverId=0l;
+            serverId=serverId;
             hosts=hosts;
+            serviceId=serviceId;
         }
 
+    let listen t =
+        let service = HostManager.getServiceId t.hosts t.serviceId in
+        match service with
+        | Some s -> (
+            let service = List.fold_left (fun found s -> 
+                match found with
+                | Some s -> Some s
+                | None -> (match s with
+                    | HostManager.HostEntry.Subscription s -> Some s
+                    | _ -> None
+                )) None s.hosts in
+            match service with
+            | Some _ -> ()
+            | None -> ()
+        )
+        | None -> ()
 
 end

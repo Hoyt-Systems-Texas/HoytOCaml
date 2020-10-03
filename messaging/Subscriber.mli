@@ -17,6 +17,7 @@ end
 module Make_SubscriberInfoZeromq(S: SubscriberInfo) : sig
     type t
 
-    val make : HostManager.t -> t
+    val make : HostManager.hostId -> HostManager.serviceId -> HostManager.t -> t
 
+    val listen : t -> unit
 end

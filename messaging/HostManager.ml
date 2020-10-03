@@ -4,36 +4,45 @@ open Core
 type serviceId = int32
 type hostId = int32
 
-(* The entry for a host. *)
-type rpcEntry = {
-    pusSocket: string;
-}
+module RpcEntry = struct
+    (* The entry for a host. *)
+    type t = {
+        pusSocket: string;
+    }
+end 
 
-(* An entry for a subscription. *)
-type subscribeEntry = {
-    subSocket: string;
-    pushSocket: string;
-}
+module SubscribeEntry = struct
+    (* An entry for a subscription. *)
+    type t = {
+        subSocket: string;
+        pushSocket: string;
+    }
+end
 
-(* Represents a host entry.*)
-type hostEntry =
-    (* Reprsents a rpc entry. *)
-    | Rpc of rpcEntry
-    (* The host you can subscribe. *)
-    | Subscription of subscribeEntry
+module HostEntry = struct
+    (* Represents a host entry.*)
+    type t =
+        (* Reprsents a rpc entry. *)
+        | Rpc of RpcEntry.t
+        (* The host you can subscribe. *)
+        | Subscription of SubscribeEntry.t
+end
+
+module ServiceEntry = struct
+
+    type t = {
+        (* The id of the service the entry is for. *)
+        serviceId: int32;
+        (* The list of hosts for the service. *)
+        hosts: HostEntry.t list;
+    }
+end
 
 (* Represents the service entries. *)
-type serviceEntry = {
-    (* The id of the service the entry is for. *)
-    serviceId: int32;
-    (* The list of hosts for the service. *)
-    hosts: hostEntry list;
-}
-
 type t = {
     serverId: serviceId;
-    services: (serviceId,  serviceEntry) Hashtbl.t;
-    hosts: (int32, hostEntry) Hashtbl.t;
+    services: (serviceId,  ServiceEntry.t) Hashtbl.t;
+    hosts: (int32, HostEntry.t) Hashtbl.t;
 }
 
 let make serverId =
@@ -42,3 +51,6 @@ let make serverId =
         services=Hashtbl.create (module Int32);
         hosts=Hashtbl.create (module Int32);
     }
+
+let getServiceId t serviceId =
+    Hashtbl.find t.services serviceId
