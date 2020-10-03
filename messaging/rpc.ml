@@ -16,15 +16,19 @@ module Make_Request_processor(R: Request_processor) = struct
         service_id: Host_manager.service_id;
         host_manager: Host_manager.t;
         pull_socket: [`Push] Zmq.Socket.t;
+        pull_socket_lwt: [`Push] Zmq_lwt.Socket.t;
     }
 
     (* Creates a new request processor. *)
     let make ctx host_id service_id host_manager =
+        let socket = Zmq.Socket.create ctx Zmq.Socket.push in
+        let lwt_socket = Zmq_lwt.Socket.of_socket socket in
         {
             host_id;
             service_id;
             host_manager;
-            pull_socket=Zmq.Socket.create ctx Zmq.Socket.push;
+            pull_socket=socket;
+            pull_socket_lwt=lwt_socket;
         }
 
     (* Starts the process for listening on the socket. *)

@@ -1,10 +1,10 @@
-module type StateMachine = sig
+module type State_machine = sig
     type context
     type event
     type state
 
 
-    type stateChangeType =
+    type state_change_type =
         | Entry of state
         | Exit of state
 
@@ -14,27 +14,27 @@ module type StateMachine = sig
         | Full
         | Deferred
 
-    type stateAction =
+    type state_action =
         | Defer
-        | ChangeState of state
+        | Change_state of state
         | Action of (context -> event -> context Lwt.t)
         | Ignore
 
-    val whatAction : state -> event -> stateAction
+    val what_action : state -> event -> state_action
 
-    val stateChange : stateChangeType -> context -> event -> context Lwt.t
+    val state_change : state_change_type -> context -> event -> context Lwt.t
 
 end
 
-module Make_persisted(M: StateMachine) : sig
+module Make_persisted(M: State_machine) : sig
 
     type t
 
     val send : t -> M.event -> M.context Lwt.t
 
-    val getCtx : t -> M.context
+    val get_ctx : t -> M.context
 
-    val getState : t -> M.state
+    val get_state : t -> M.state
 
     val make : M.state -> M.context -> t
 

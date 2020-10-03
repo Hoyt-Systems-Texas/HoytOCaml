@@ -1,30 +1,30 @@
 open Core
 
-type whichQueue =
+type which_queue =
     | Primary
     | Defer
 
 type 'a t = {
     primary: 'a Queue.t;
     defer: 'a Queue.t;
-    whichQueue: whichQueue ref;
+    which_queue: which_queue ref;
 }
 
 let make () = {
     primary = Queue.create ();
     defer = Queue.create ();
-    whichQueue = ref Primary;
+    which_queue = ref Primary;
 }
 
 let dequeue t =
-    match !(t.whichQueue) with 
+    match !(t.which_queue) with 
     | Primary -> 
         Queue.dequeue t.primary
     | Defer ->
         match Queue.dequeue t.defer with
         | Some(a) -> Some(a)
         | None -> 
-            let wh = t.whichQueue in wh := Primary;
+            let wh = t.which_queue in wh := Primary;
             Queue.dequeue t.primary
 
 
@@ -37,4 +37,4 @@ let defer t v =
     ()
 
 let reset t =
-    let wh = t.whichQueue in wh := Defer;
+    let wh = t.which_queue in wh := Defer;

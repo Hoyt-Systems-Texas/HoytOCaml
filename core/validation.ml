@@ -2,19 +2,19 @@ open Core
 
 type error =
     | Required
-    | MinLength of int
-    | MaxLength of int
-    | MinValue of int
-    | MaxValue of int
+    | Min_length of int
+    | Max_length of int
+    | Min_value of int
+    | Max_value of int
     [@@deriving sexp_of,compare]
 
 type errors = error list
 
-module StringValidation = struct
+module String_validation = struct
     type t = {
         required: bool;
-        minLength: int;
-        maxLength: int;
+        min_length: int;
+        max_length: int;
     }  [@@deriving sexp_of, compare]
 
     let validation t value =
@@ -24,30 +24,30 @@ module StringValidation = struct
             [Required]
         else
             let errors = 
-                if t.minLength > length then 
-                    [MinLength t.minLength]
+                if t.min_length > length then 
+                    [Min_length t.min_length]
                 else
                     []
                 in 
-            if t.maxLength < length then
-                MaxLength t.maxLength::errors
+            if t.max_length < length then
+                Max_length t.max_length::errors
             else
                 errors
 end
 
-module IntValidation = struct
+module Int_validation = struct
     type t = {
-        minValue: int;
-        maxValue: int;
+        min_value: int;
+        max_value: int;
     }  [@@deriving sexp_of, compare]
 
     let validation t v =
-        let errors = if t.minValue > v then
-            [MinValue t.minValue]
+        let errors = if t.min_value > v then
+            [Min_value t.min_value]
         else
             [] in
-        if t.maxValue < v then
-            MaxValue t.maxValue::errors
+        if t.max_value < v then
+            Max_value t.max_value::errors
         else
             errors
 end

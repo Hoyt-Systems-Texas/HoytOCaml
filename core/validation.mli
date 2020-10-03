@@ -1,28 +1,28 @@
 type error =
     | Required
-    | MinLength of int
-    | MaxLength of int
-    | MinValue of int
-    | MaxValue of int
+    | Min_length of int
+    | Max_length of int
+    | Min_value of int
+    | Max_value of int
     [@@deriving sexp_of, compare]
 
 type errors = error list
 
-module StringValidation : sig
+module String_validation : sig
 
     type t = {
         required: bool;
-        minLength: int;
-        maxLength: int;
+        min_length: int;
+        max_length: int;
     } [@@deriving sexp_of, compare]
 
     val validation : t -> string -> errors
 end
 
-module IntValidation : sig
+module Int_validation : sig
     type t = {
-        minValue: int;
-        maxValue: int;
+        min_value: int;
+        max_value: int;
     } [@@deriving sexp_of, compare]
 
     val validation : t -> int -> errors

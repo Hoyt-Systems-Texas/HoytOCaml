@@ -1,12 +1,12 @@
 open Core
 open Lwt.Infix
 
-module type StateMachine = sig
+module type State_machine = sig
     type context
     type event
     type state
 
-    type stateChangeType =
+    type state_change_type =
         | Entry of state
         | Exit of state
 
@@ -15,21 +15,21 @@ module type StateMachine = sig
         | Full
         | Deferred
 
-    type stateAction =
+    type state_action =
         | Defer
-        | ChangeState of state
+        | Change_state of state
         | Action of (context -> event -> context Lwt.t)
         | Ignore
 
-    val whatAction : state -> event -> stateAction
+    val what_action : state -> event -> state_action
 
-    val stateChange : stateChangeType -> context -> event -> context Lwt.t
+    val state_change : state_change_type -> context -> event -> context Lwt.t
 
 end
 
-module Make_persisted(M: StateMachine) = struct
+module Make_persisted(M: State_machine) = struct
 
-    type runState = 
+    type run_state = 
         | Idle
         | Running
         [@@deriving sexp_of,compare]
@@ -42,31 +42,31 @@ module Make_persisted(M: StateMachine) = struct
     type t = {
         state: M.state ref;
         ctx: M.context ref;
-        queue: request SkipQueue.t;
-        activeState: runState ref;
+        queue: request Skip_queue.t;
+        active_state: run_state ref;
     }
 
     let make state ctx = 
         {
             state = ref state;
             ctx = ref ctx;
-            queue = SkipQueue.make ();
-            activeState = ref Idle;
+            queue = Skip_queue.make ();
+            active_state = ref Idle;
         }
 
     let handleEvent t event resolve =
-        match M.whatAction !(t.state) event with
-        | Defer -> SkipQueue.defer t.queue {event; resolve}
-        | ChangeState state -> 
-            let currentState = !(t.state) in
+        match M.what_action !(t.state) event with
+        | Defer -> Skip_queue.defer t.queue {event; resolve}
+        | Change_state state -> 
+            let current_state = !(t.state) in
             let ctx = !(t.ctx) in
-            let result = M.stateChange (M.Exit currentState) ctx event in 
+            let result = M.state_change (M.Exit current_state) ctx event in 
             result >>= (fun ctx -> 
                 let ctxRef = t.ctx in
                 ctxRef := ctx;
-                M.stateChange (M.Entry state) ctx event)
+                M.state_change (M.Entry state) ctx event)
             >>= (fun ctx ->
-                SkipQueue.reset t.queue;
+                Skip_queue.reset t.queue;
                 let s = t.state in s := state;
                 let c = t.ctx in c := ctx;
                 Lwt.wakeup resolve ctx;
@@ -86,15 +86,15 @@ module Make_persisted(M: StateMachine) = struct
 
 
     let eventLoop t =
-        if compare_runState !(t.activeState) Idle = 0 then
-            let s = t.activeState in s := Running;
+        if compare_run_state !(t.active_state) Idle = 0 then
+            let s = t.active_state in s := Running;
             let rec loop _ =
-                match SkipQueue.dequeue t.queue with
+                match Skip_queue.dequeue t.queue with
                 | Some{event; resolve} ->
                     handleEvent t event resolve;
                     loop ();
                 | None -> 
-                    let s = t.activeState in s := Idle;
+                    let s = t.active_state in s := Idle;
                     ()
                 in loop ()
         else 
@@ -102,17 +102,17 @@ module Make_persisted(M: StateMachine) = struct
 
     let send t event =
         let (promise, resolve) = Lwt.wait () in
-        SkipQueue.enqueue t.queue {
+        Skip_queue.enqueue t.queue {
             event; 
             resolve;
         };
         eventLoop t;
         promise
 
-    let getCtx t =
+    let get_ctx t =
         !(t.ctx)
 
-    let getState t =
+    let get_state t =
         !(t.state)
 
 end

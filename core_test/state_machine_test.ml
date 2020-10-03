@@ -1,8 +1,8 @@
 open Core
-open HoytCore.StateMachine
+open HoytCore.State_machine
 open Lwt.Infix
 
-module TestMachine = struct
+module Test_machine = struct
 
     type context = {
         ran: bool;
@@ -27,7 +27,7 @@ module TestMachine = struct
         | StateC 
         [@@deriving sexp_of, compare]
 
-    type stateChangeType =
+    type state_change_type =
         | Entry of state
         | Exit of state
 
@@ -36,16 +36,16 @@ module TestMachine = struct
         | Full
         | Deferred
 
-    type stateAction =
+    type state_action =
         | Defer
-        | ChangeState of state
+        | Change_state of state
         | Action of (context -> event -> context Lwt.t)
         | Ignore
 
-    let whatAction state event =
+    let what_action state event =
         match state with 
         | StateA -> (match event with 
-            | Event1 -> ChangeState StateB
+            | Event1 -> Change_state StateB
             | Event2 -> Ignore
             | Event3 -> Action (fun ctx _ -> Lwt.return {
                 ctx with action = true
@@ -53,8 +53,8 @@ module TestMachine = struct
         | StateB -> Action (fun ctx _ -> Lwt.return ctx)
         | StateC -> Ignore
         
-    let stateChange changeType ctx evt =
-        match (changeType, evt) with 
+    let state_change change_type ctx evt =
+        match (change_type, evt) with 
         | (Entry StateA, Event1) -> Lwt.return ctx
         | (Entry StateA, Event2) -> Lwt.return ctx
         | (Entry StateA, Event3) -> Lwt.return ctx
@@ -72,34 +72,34 @@ module TestMachine = struct
 
 end
 
-module MyStateMachine = Make_persisted(TestMachine)
+module MyStateMachine = Make_persisted(Test_machine)
 
 let%test_unit "Test state machine" =
-    let context = TestMachine.make in
+    let context = Test_machine.make in
     [%test_eq: bool] false context.ran;
     let machine = MyStateMachine.make StateA context in 
     MyStateMachine.send machine Event1 >>= (fun ctx -> 
         Lwt.return @@ [%test_eq: bool] true ctx.ran)
         >>= (fun _ -> 
-            let state = MyStateMachine.getState machine in
-            [%test_eq: TestMachine.state] StateB state;
+            let state = MyStateMachine.get_state machine in
+            [%test_eq: Test_machine.state] StateB state;
             Lwt.return true)
         |> Lwt.ignore_result
 
 let%test_unit "Test state machine ignore" =
-    let context = TestMachine.make in
+    let context = Test_machine.make in
     [%test_eq: bool] false context.ran;
     let machine = MyStateMachine.make StateA context in 
     MyStateMachine.send machine Event2 >>= (fun ctx -> 
         Lwt.return @@ [%test_eq: bool] false ctx.ran)
         >>= (fun _ ->
-            let state = MyStateMachine.getState machine in
-            [%test_eq: TestMachine.state] StateA state;
+            let state = MyStateMachine.get_state machine in
+            [%test_eq: Test_machine.state] StateA state;
             Lwt.return_unit)
         |> Lwt.ignore_result
 
 let%test_unit "Test state machine ignore" =
-    let context = TestMachine.make in
+    let context = Test_machine.make in
     [%test_eq: bool] false context.ran;
     let machine = MyStateMachine.make StateA context in 
     MyStateMachine.send machine Event3 >>= (fun ctx -> 
