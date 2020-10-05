@@ -11,6 +11,8 @@ module Host_entry : sig
 
     (* An entry for a subscription. *)
     type t = {
+        service_id: int32;
+        host_id: int32;
         (* The location for the subscribtion in a socket.*)
         sub_socket: string;
         (* The push socket for to sending rpc and heartbeat request to. *)
@@ -36,3 +38,9 @@ val make : host_id -> t
 
 (* Gets the id of the service. *)
 val get_service_id : t -> service_id -> Service_entry.t option
+
+(* Used to get a host with the specified id. *)
+val get_host : t -> host_id -> Host_entry.t option
+
+(* Used to load the hosts and sevices into a dictionary. *)
+val load : t -> Host_entry.t list -> t

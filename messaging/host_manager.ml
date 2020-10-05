@@ -9,6 +9,10 @@ type host_id = int32
 module Host_entry = struct
     (* The entry for a host. *)
     type t = {
+        (* The id of the service. *)
+        service_id: int32;
+        (* The id of the host. *)
+        host_id: int32;
         (* The url for subscribing to events and let every subscriber know it's alive. *)
         sub_socket: string;
         (* The url for the push socket for sending rpc requests to. Heartbeat pings go over the subsocket and the subsocket should automatically send out heartbeats to let the services know it's active.*)
@@ -42,3 +46,35 @@ let make host_id =
 
 let get_service_id t service_id =
     Hashtbl.find t.services service_id
+
+let get_host t host_id =
+    Hashtbl.find t.hosts host_id
+
+let load t (hosts: Host_entry.t list) =
+    let t = List.fold hosts ~init:t ~f:(fun t host ->
+        match Hashtbl.add t.hosts ~key:host.host_id ~data:host with 
+        | `Ok -> 
+            t
+        | `Duplicate ->
+            Lwt_log.info ("Duplicate host entry " ^ Int32.to_string host.host_id)
+            |> Lwt.ignore_result;
+            t) in
+    List.fold hosts ~init:t ~f:(fun t host ->
+        match Hashtbl.add t.services ~key:host.service_id ~data: {
+            service_id=host.service_id;
+            hosts=[host]
+        } with 
+        | `Ok -> 
+            t
+        | `Duplicate ->
+            Hashtbl.update t.services host.host_id ~f:(fun services ->
+                match services with
+                | Some s -> 
+                    let hosts = host :: s.hosts in
+                    {s with hosts=hosts}
+                | None ->
+                    {
+                        service_id=host.service_id;
+                        hosts=[host];
+                    });
+            t)
