@@ -1,4 +1,4 @@
-(executable
- (name request_processor_test)
+(executables
+ (names request_processor_test send_message_test)
  (libraries core lwt zmq zmq-lwt lwt_log Hoyt_messaging)
  (preprocess (pps ppx_jane ppx_compare)))

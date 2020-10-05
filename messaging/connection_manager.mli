@@ -11,4 +11,4 @@ type t
  *)
 val send_msg: t -> Host_manager.host_id -> string -> string -> unit Lwt.t
 
-val make: Zmq.Context.t -> Host_manager.host_id -> Host_manager.t -> t
+val make: Zmq.Context.t -> Host_manager.t -> t

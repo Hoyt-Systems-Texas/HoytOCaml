@@ -11,7 +11,9 @@ module Host_entry : sig
 
     (* An entry for a subscription. *)
     type t = {
+        (* The id of the service. *)
         service_id: int32;
+        (* The id of the host. *)
         host_id: int32;
         (* The location for the subscribtion in a socket.*)
         sub_socket: string;

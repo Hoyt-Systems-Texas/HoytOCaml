@@ -8,8 +8,6 @@ type socket_entry = {
 }
 
 type t = {
-    (* The id of the host. *)
-    host_id: Host_manager.host_id;
     (* The correlation id of the host. *)
     correlation_id: int64;
     (* The storage of the push sockets. *)
@@ -19,11 +17,10 @@ type t = {
     context: Zmq.Context.t;
 }
 
-let make ctx host_id host_manager =
+let make ctx host_manager =
     let push_sockets = Hashtbl.create (module Int32) in
     {
         context=ctx;
-        host_id;
         correlation_id=0L;
         push_sockets;
         host_manager;
