@@ -10,7 +10,7 @@ module Host_entry = struct
     (* The entry for a host. *)
     type t = {
         (* The id of the service. *)
-        service_id: int32;
+        service_id: int32 option;
         (* The id of the host. *)
         host_id: int32;
         (* The url for subscribing to events and let every subscriber know it's alive. *)
@@ -60,21 +60,24 @@ let load t (hosts: Host_entry.t list) =
             |> Lwt.ignore_result;
             t) in
     List.fold hosts ~init:t ~f:(fun t host ->
-        match Hashtbl.add t.services ~key:host.service_id ~data: {
-            service_id=host.service_id;
-            hosts=[host]
-        } with 
-        | `Ok -> 
-            t
-        | `Duplicate ->
-            Hashtbl.update t.services host.host_id ~f:(fun services ->
-                match services with
-                | Some s -> 
-                    let hosts = host :: s.hosts in
-                    {s with hosts=hosts}
-                | None ->
-                    {
-                        service_id=host.service_id;
-                        hosts=[host];
-                    });
-            t)
+        match host.service_id with 
+        | Some service_id -> 
+            (match Hashtbl.add t.services ~key:service_id ~data: {
+                service_id=service_id;
+                hosts=[host]
+            } with 
+            | `Ok -> 
+                t
+            | `Duplicate ->
+                Hashtbl.update t.services service_id ~f:(fun services ->
+                    match services with
+                    | Some s -> 
+                        let hosts = host :: s.hosts in
+                        {s with hosts=hosts}
+                    | None ->
+                        {
+                            service_id=service_id;
+                            hosts=[host];
+                        });
+                t)
+        | None -> t)
