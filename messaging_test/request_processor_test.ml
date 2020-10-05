@@ -19,12 +19,14 @@ let hosts = [
         service_id=Some 1l;
         sub_socket="tcp://localhost:5001";
         push_socket="tcp://localhost:5002";
+        pull_socket="tcp://localhost:4000";
     };
     {
         host_id=2l;
         service_id=Some 2l;
         sub_socket="tcp://localhost:5003";
         push_socket="tcp://localhost:5004";
+        pull_socket="tcp://localhost:4001";
     }
 ]
 

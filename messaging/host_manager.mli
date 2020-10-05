@@ -19,6 +19,8 @@ module Host_entry : sig
         sub_socket: string;
         (* The push socket for to sending rpc and heartbeat request to. *)
         push_socket: string;
+        (* The pull socket for the rpc calls. *)
+        pull_socket: string;
     }
 
 end
