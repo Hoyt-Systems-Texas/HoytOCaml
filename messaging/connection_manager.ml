@@ -1,17 +1,22 @@
 open! Core
 
-type socket_entry = {
-    host_id: Host_manager.host_id;
-    push_socket: [`Push] Zmq.Socket.t;
-    (* The last we tried to send a message to host. *)
-    last_used: Core.Time.t;
-}
+module Socket_entry = struct
+    type t = {
+        host_id: Host_manager.host_id;
+        push_socket: [`Push] Zmq.Socket.t;
+        (* The last we tried to send a message to host. *)
+        last_used: Core.Time.t;
+    }
+
+    let close t = 
+        Zmq.Socket.close t.push_socket
+end
 
 type t = {
     (* The correlation id of the host. *)
     correlation_id: int64;
     (* The storage of the push sockets. *)
-    push_sockets: (Host_manager.host_id, socket_entry) Hashtbl.t;
+    push_sockets: (Host_manager.host_id, Socket_entry.t) Hashtbl.t;
     (* The host manager. *)
     host_manager: Host_manager.t;
     context: Zmq.Context.t;
@@ -41,13 +46,19 @@ let send_msg t host_id header body =
             let socket = Zmq.Socket.create t.context Zmq.Socket.push in
             Zmq.Socket.connect socket host.push_socket;
             let conn = {
-                host_id;
+                Socket_entry.host_id=host_id;
                 push_socket=socket;
                 last_used=Core.Time.now ()
             } in (
             match Hashtbl.add t.push_sockets ~key:host_id ~data:conn with 
-            | `Ok -> Lwt.return_unit
+            | `Ok -> 
+                send conn.push_socket header body
             | `Duplicate -> 
                 Lwt_log.info "Had a duplicate when adding a connection.  This should never happen.")
         | None ->
             Lwt.return_unit)
+
+let terminate t =
+    Hashtbl.for_all t.push_sockets ~f:(fun b ->
+        Socket_entry.close b;
+        true);

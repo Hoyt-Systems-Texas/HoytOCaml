@@ -39,12 +39,15 @@ module Make_Request_processor(R: Request_processor) = struct
         }
 
     (* Starts the process for listening on the socket. *)
-    let listen (t: t) =
+    let listen t =
         match !(t.state) with
         | Idle ->
+            print_endline "Starting the service...";
             t.state := Running;
             let socket = Zmq.Socket.create t.context Zmq.Socket.pull in
             let socket_lwt = Zmq_lwt.Socket.of_socket socket in
+            Zmq.Socket.bind socket t.bind_url;
+            print_endline ("Bound to url: " ^ t.bind_url);
             let rec handler_loop () =
                 Zmq_lwt.Socket.recv socket_lwt
                 >>= fun msg -> (

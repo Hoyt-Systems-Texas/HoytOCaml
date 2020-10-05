@@ -1,4 +1,5 @@
 open! Core
+open Lwt.Infix
 
 let hosts = [
     {
@@ -22,5 +23,10 @@ let () =
     let manager = H_m.load manager hosts in
     let ctx = Zmq.Context.create () in
     let connections = H_c.make ctx manager in
-    Lwt_main.run @@ H_c.send_msg connections 1l "h" "m";
+    Lwt_main.run
+        (H_c.send_msg connections 1l "h" "m"
+        >>= (fun _ -> print_endline "Message sent..."; 
+            ignore (Hoyt_messaging.Connection_manager.terminate connections: bool);
+            Zmq.Context.terminate ctx;
+            Lwt.return_unit));
     ()

@@ -11,4 +11,8 @@ type t
  *)
 val send_msg: t -> Host_manager.host_id -> string -> string -> unit Lwt.t
 
+(* Closes all of the sockets that are currently opened.
+ *)
+val terminate: t -> bool
+
 val make: Zmq.Context.t -> Host_manager.t -> t
