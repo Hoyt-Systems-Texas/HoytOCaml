@@ -10,6 +10,9 @@ module type Request_processor = sig
 
     (* Used to handle the incoming of the message. *)
     val handle_message : header -> encoding -> (encoding * encoding) Lwt.t
+
+    val message_type : header -> Messaging.Message_type.t
+
 end
 
 module Make_Request_processor(R: Request_processor) = struct

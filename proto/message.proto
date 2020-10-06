@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+enum SystemMessage {
+    Heartbeat = 0;
+}
+
+enum UserMessage {
+    CreateUser = 0;
+}
+
+enum OrganizationMessage {
+    CreateOrganization = 0;
+}
+
+message PayloadType {
+    oneof Payload {
+        SystemMessage system = 1;
+        UserMessage user = 2;
+        OrganizationMessage organization = 3;
+    }
+}
+
+// The header part of the message to send to the backend service.
+message Header {
+    int32 fromId = 1;
+    int32 toId = 2;
+    int64 correlationId = 4;
+    int64 userId = 5;
+    int32 organizationId=6;
+    enum MessageType {
+        PING = 0;
+        PONG = 1;
+        REQ = 2;
+        REPLY = 3;
+        EVENT = 4;
+        STATUS = 5;
+    }
+    MessageType messageType = 7;
+    PayloadType payloadType = 8;
+    enum Status {
+        NA = 0;
+        Success = 1;
+        Error = 2;
+        Busy = 3;
+        Invalid = 4;
+        Timeout = 5;
+    }
+    Status status = 9;
+}

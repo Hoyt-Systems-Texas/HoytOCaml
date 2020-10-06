@@ -6,3 +6,15 @@ module Pending_message = struct
         | Full
 
 end
+
+module Message_type = struct
+
+    type t =
+        | Ping
+        | Pong
+        | Req
+        | Reply
+        | Event
+        | Status
+    
+end

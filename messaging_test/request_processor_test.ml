@@ -2,13 +2,29 @@ open! Core
 
 module Test_processor = struct
     type encoding = string
-    type header = string
+    type header = Message.Header.t
 
-    let decode_header b = Some b
-    let handle_message header body =
-        print_endline header;
+    let decode_header b = 
+        let result = Ocaml_protoc_plugin.Reader.create b in 
+        match Message.Header.from_proto result with
+        | Ok h -> Some h
+        | Error(_) -> None
+
+    let handle_message _ body =
         print_endline body;
         Lwt.return ("s", "e")
+
+    let message_type (header: Message.Header.t) =
+        let module H_M_T = Hoyt_messaging.Messaging.Message_type in
+        let module M_H_T = Message.Header.MessageType in
+        match header.messageType with
+        | M_H_T.PING -> H_M_T.Ping
+        | M_H_T.PONG -> H_M_T.Pong
+        | M_H_T.STATUS -> H_M_T.Status
+        | M_H_T.REQ -> H_M_T.Req
+        | M_H_T.REPLY -> H_M_T.Reply
+        | M_H_T.EVENT -> H_M_T.Event
+        
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)

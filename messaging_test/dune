@@ -1,4 +1,4 @@
 (executables
  (names request_processor_test send_message_test)
- (libraries core lwt zmq zmq-lwt lwt_log Hoyt_messaging)
+ (libraries core lwt zmq zmq-lwt lwt_log Hoyt_messaging ocaml-protoc-plugin ocaml-protoc-plugin.google_types)
  (preprocess (pps ppx_jane ppx_compare)))

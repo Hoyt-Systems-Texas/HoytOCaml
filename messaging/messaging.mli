@@ -11,3 +11,14 @@ module Pending_message : sig
         | Full
 
 end
+
+module Message_type : sig
+
+    type t =
+        | Ping
+        | Pong
+        | Req
+        | Reply
+        | Event
+        | Status
+end

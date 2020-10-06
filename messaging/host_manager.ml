@@ -17,6 +17,7 @@ module Host_entry = struct
         sub_socket: string;
         (* The url for the push socket for sending rpc requests to. Heartbeat pings go over the subsocket and the subsocket should automatically send out heartbeats to let the services know it's active.*)
         push_socket: string;
+        (* The address of the pull socket to send replies too. *)
         pull_socket: string;
     }
 end 

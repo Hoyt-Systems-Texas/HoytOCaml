@@ -4,10 +4,11 @@ open Lwt.Infix
 module type Connection_info = sig
     type header
     
-    val deserialize_header : string -> header
+    val deserialize_header : string -> header option
 
     val get_correlation_id : header -> int64
 
+    val get_respond_host_id : header -> int32
 end
 
 module Socket_entry = struct
@@ -100,18 +101,25 @@ module Make_connections(M: Connection_info) = struct
             | None ->
                 Lwt.return Messaging.Pending_message.Full)
 
+    (*
+    let send_reply t host_id correlation_id header body =
+        Lwt.return_unit
+        *)
+
     let terminate t =
         Hashtbl.for_all t.push_sockets ~f:(fun b ->
             Socket_entry.close b;
             true)
 
     let resolve t h m =
-        let header = M.deserialize_header h in 
-        let corr_id = M.get_correlation_id header in
-        match Hashtbl.find_and_remove t.pending_messages corr_id with
-        | Some r -> 
-            Lwt.wakeup r.deferred (Messaging.Pending_message.Message (header, m));
-            Lwt.return_unit
+        match M.deserialize_header h with
+        | Some header -> (
+            let corr_id = M.get_correlation_id header in
+            match Hashtbl.find_and_remove t.pending_messages corr_id with
+            | Some r -> 
+                Lwt.wakeup r.deferred (Messaging.Pending_message.Message (header, m));
+                Lwt.return_unit
+            | None -> Lwt.return_unit)
         | None -> Lwt.return_unit
 
     let start_loop t =
