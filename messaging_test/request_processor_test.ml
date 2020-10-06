@@ -10,9 +10,12 @@ module Test_processor = struct
         | Ok h -> Some h
         | Error(_) -> None
 
-    let handle_message _ body =
-        print_endline body;
-        Lwt.return ("s", "e")
+    let handle_message header body =
+        let header = {
+            header with 
+            Message.Header.messageType = Message.Header.MessageType.REPLY} in
+        let header = Message.Header.to_proto header in
+        Lwt.return (Ocaml_protoc_plugin.Writer.contents header, body)
 
     let message_type (header: Message.Header.t) =
         let module H_M_T = Hoyt_messaging.Messaging.Message_type in
@@ -24,10 +27,31 @@ module Test_processor = struct
         | M_H_T.REQ -> H_M_T.Req
         | M_H_T.REPLY -> H_M_T.Reply
         | M_H_T.EVENT -> H_M_T.Event
+
+    let from_id (h:header) = h.fromId;
         
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
+
+module Test_connection_info = struct 
+
+    type header = Message.Header.t
+
+    let deserialize_header h =
+        let reader = Ocaml_protoc_plugin.Reader.create h in
+        match Message.Header.from_proto reader with
+        | Ok h -> Some h
+        | Error(_) -> None
+
+    let get_correlation_id (header: Message.Header.t) =
+        header.correlationId
+
+    let get_respond_host_id _ =
+        1l
+end
+
+module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
 
 let hosts = [
     {
@@ -52,7 +76,15 @@ let () =
     let host_id = 1l in
     let service_id = 1l in 
     let bind_url = "tcp://*:5002" in 
+    let module H_c = Test_connection_manager in
     let host_manager = Hoyt_messaging.Host_manager.make 1l in
     let host_manager = Hoyt_messaging.Host_manager.load host_manager hosts in
-    let processor = Service_processor.make ctx bind_url host_id service_id host_manager in
+    let connections = H_c.make ctx host_manager in
+    let processor = Service_processor.make ctx 
+        bind_url 
+        host_id 
+        service_id 
+        host_manager 
+        (fun _ _ -> Lwt.return_unit) 
+        (fun host_id h b -> (H_c.send_reply connections host_id h b)) in
     Lwt_main.run @@ Service_processor.listen processor

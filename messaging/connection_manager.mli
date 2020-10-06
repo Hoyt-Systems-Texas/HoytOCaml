@@ -46,6 +46,6 @@ module Make_connections(M: Connection_info) : sig
      * ctx - The zeromq ctx.
      * host_manager - The host manager to handle the connections.
      * rpc - The rpc socket manager. *)
-    val make: Zmq.Context.t -> Host_manager.t -> string -> t
+    val make: Zmq.Context.t -> Host_manager.t -> t
 
 end 

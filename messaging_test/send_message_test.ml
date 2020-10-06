@@ -37,16 +37,75 @@ end
 
 module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
 
+module Test_processor = struct 
+    type encoding = string
+    type header = Message.Header.t
+
+    let decode_header encoding =
+        let reader = Ocaml_protoc_plugin.Reader.create encoding in
+        match Message.Header.from_proto reader with
+        | Ok header -> Some header
+        | Error _ -> None
+
+    let handle_message header body =
+        let header = {
+            header with 
+            Message.Header.messageType = Message.Header.MessageType.REPLY} in
+        let header = Message.Header.to_proto header in
+        Lwt.return (Ocaml_protoc_plugin.Writer.contents header, body)
+    
+    let message_type (header: header) =
+        let module H_M_T = Hoyt_messaging.Messaging.Message_type in
+        let module M_H_T = Message.Header.MessageType in
+        match header.messageType with
+        | M_H_T.PING -> H_M_T.Ping
+        | M_H_T.PONG -> H_M_T.Pong
+        | M_H_T.STATUS -> H_M_T.Status
+        | M_H_T.REQ -> H_M_T.Req
+        | M_H_T.REPLY -> H_M_T.Reply
+        | M_H_T.EVENT -> H_M_T.Event
+
+    let from_id (h:header) = h.fromId;
+
+end
+
+module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
+
 let () =
     let module H_m = Hoyt_messaging.Host_manager in 
     let module H_c = Test_connection_manager in
     let manager = H_m.make 1l in 
     let manager = H_m.load manager hosts in
+    let bind_url = "tcp://*:5004" in 
     let ctx = Zmq.Context.create () in
-    let connections = H_c.make ctx manager "tcp://*:4001" in
+    let connections = H_c.make ctx manager in
+    let rpc = Service_processor.make 
+        ctx 
+        bind_url 
+        2l 
+        2l 
+        manager
+        (fun h b -> H_c.resolve connections h b) 
+        (fun host_id h b -> (H_c.send_reply connections host_id h b)) in
     let corr_id = H_c.next_id connections in
+    let messageType = Message.Header.MessageType.REQ in
+    let payloadType = Some (`User Message.UserMessage.CreateUser) in
+    let status = Message.Header.Status.NA in
+    let header = {
+        Message.Header.fromId=2l;
+        Message.Header.toId=2l;
+        correlationId=corr_id;
+        userId=1L;
+        organizationId=1l;
+        messageType;
+        payloadType;
+        status;
+    } in
+    let header = Message.Header.to_proto header in
+    let header = Ocaml_protoc_plugin.Writer.contents header in
     Lwt_main.run
-        (H_c.send_msg connections 1l corr_id "h" "m"
+        (Service_processor.listen rpc |> Lwt.ignore_result; Lwt.return_unit
+        >>= (fun _ -> H_c.send_msg connections 1l corr_id header "m")
         >>= (fun _ -> print_endline "Message sent..."; 
             ignore (H_c.terminate connections: bool);
             Zmq.Context.terminate ctx;

@@ -41,12 +41,10 @@ module Make_connections(M: Connection_info) = struct
         (* The zeromq context for creating the sockets. *)
         context: Zmq.Context.t;
         (* The address for the reply sockets. *)
-        reply_socket: string;
-        (* The pending messages to be sent back. *)
         pending_messages: (int64, M.header Pending_message.t) Hashtbl.t;
     }
 
-    let make ctx host_manager reply_socket =
+    let make ctx host_manager =
         let push_sockets = Hashtbl.create (module Int32) in
         let pending_messages = Hashtbl.create (module Int64) in
         {
@@ -54,7 +52,6 @@ module Make_connections(M: Connection_info) = struct
             correlation_id=ref 0L;
             push_sockets;
             host_manager;
-            reply_socket;
             pending_messages;
         }
 
@@ -84,6 +81,7 @@ module Make_connections(M: Connection_info) = struct
         | None ->
             (match Host_manager.get_host t.host_manager host_id with
             | Some host -> 
+                print_endline ("Connecting to " ^ host.push_socket );
                 let socket = Zmq.Socket.create t.context Zmq.Socket.push in
                 Zmq.Socket.connect socket host.push_socket;
                 let conn = {
