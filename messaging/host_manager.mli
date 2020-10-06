@@ -13,6 +13,8 @@ module Host_entry : sig
     type t = {
         (* The id of the service. *)
         service_id: int32 option;
+        (* A name for the service.  Not used for lookup.*)
+        name: string;
         (* The id of the host. *)
         host_id: int32;
         (* The location for the subscribtion in a socket.*)

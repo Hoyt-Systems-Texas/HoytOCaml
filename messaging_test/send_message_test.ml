@@ -5,6 +5,7 @@ let hosts = [
     {
         Hoyt_messaging.Host_manager.Host_entry.host_id=1l;
         service_id=Some 1l;
+        name="test service 1";
         sub_socket="tcp://localhost:5001";
         push_socket="tcp://localhost:5002";
         pull_socket="tcp://*:5002";
@@ -12,6 +13,7 @@ let hosts = [
     {
         host_id=2l;
         service_id=Some 2l;
+        name="test service 2";
         sub_socket="tcp://localhost:5003";
         push_socket="tcp://localhost:5004";
         pull_socket="tcp://*:5004";
