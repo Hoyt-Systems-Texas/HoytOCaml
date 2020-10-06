@@ -3,8 +3,6 @@ open! Core
 module type Connection_info = sig
     type header
     
-    val deserialize_header : string -> header option
-
     val get_correlation_id : header -> int64
 
     val get_respond_host_id : header -> int32
@@ -28,9 +26,8 @@ module Make_connections(M: Connection_info) : sig
      * t - The connection manager.
      * host_id - The id of the host to send the reply too.
      * header - The serialized header to send back.
-     * body - The serialized body to send back. 
+     * body - The serialized body to send back.  *)
     val send_reply: t -> Host_manager.host_id -> string -> string -> unit Lwt.t
-    *)
 
     (*
     * Used to get the next correlation id to use.
@@ -41,6 +38,9 @@ module Make_connections(M: Connection_info) : sig
      *)
     val terminate: t -> bool
 
+    (* Called to resolve a reply message. *)
+    val resolve: t -> M.header -> string -> unit Lwt.t
+
     (* Creates a new connection manager. 
      * Arguments:
      * ctx - The zeromq ctx.
@@ -48,6 +48,4 @@ module Make_connections(M: Connection_info) : sig
      * rpc - The rpc socket manager. *)
     val make: Zmq.Context.t -> Host_manager.t -> string -> t
 
-    (* Starts the main loop for handling the replies. *)
-    val start_loop: t -> unit Lwt.t
 end 

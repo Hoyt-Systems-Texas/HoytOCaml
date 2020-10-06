@@ -7,14 +7,14 @@ let hosts = [
         service_id=Some 1l;
         sub_socket="tcp://localhost:5001";
         push_socket="tcp://localhost:5002";
-        pull_socket="tcp://localhost:4000";
+        pull_socket="tcp://*:5002";
     };
     {
         host_id=2l;
         service_id=Some 2l;
         sub_socket="tcp://localhost:5003";
         push_socket="tcp://localhost:5004";
-        pull_socket="tcp://localhost:4001";
+        pull_socket="tcp://*:5004";
     }
 ]
 
@@ -46,9 +46,7 @@ let () =
     let connections = H_c.make ctx manager "tcp://*:4001" in
     let corr_id = H_c.next_id connections in
     Lwt_main.run
-        (H_c.start_loop connections |> Lwt.ignore_result;
-            Lwt.return_unit
-        >>= fun _ -> H_c.send_msg connections 1l corr_id "h" "m"
+        (H_c.send_msg connections 1l corr_id "h" "m"
         >>= (fun _ -> print_endline "Message sent..."; 
             ignore (H_c.terminate connections: bool);
             Zmq.Context.terminate ctx;

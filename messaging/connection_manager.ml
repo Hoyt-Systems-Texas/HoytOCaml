@@ -1,11 +1,8 @@
 open! Core
-open Lwt.Infix
 
 module type Connection_info = sig
     type header
     
-    val deserialize_header : string -> header option
-
     val get_correlation_id : header -> int64
 
     val get_respond_host_id : header -> int32
@@ -61,6 +58,11 @@ module Make_connections(M: Connection_info) = struct
             pending_messages;
         }
 
+    let send_msg_int socket header body =
+        Zmq.Socket.send socket header ~more:true;
+        Zmq.Socket.send socket body;
+        ()
+
     let send t push_socket corr_id header body =
         let (def, resolver) = Lwt.wait () in
         ignore (Hashtbl.add t.pending_messages ~key:corr_id ~data:{
@@ -68,8 +70,7 @@ module Make_connections(M: Connection_info) = struct
             time=Time.now ();
             deferred=resolver;
         }: [`Duplicate | `Ok]);
-        Zmq.Socket.send push_socket header ~more:true;
-        Zmq.Socket.send push_socket body;
+        send_msg_int push_socket header body;
         def
 
     let next_id t =
@@ -77,12 +78,11 @@ module Make_connections(M: Connection_info) = struct
         (t.correlation_id) := Int64.(+) corr_id 1L;
         corr_id
 
-    let send_msg t host_id corr_id header body =
+    let get_socket t host_id =
         match Hashtbl.find t.push_sockets host_id with
-        | Some conn ->
-            send t conn.push_socket corr_id header body
-        | None -> 
-            (match Host_manager.get_host t.host_manager host_id with 
+        | Some conn -> Some conn
+        | None ->
+            (match Host_manager.get_host t.host_manager host_id with
             | Some host -> 
                 let socket = Zmq.Socket.create t.context Zmq.Socket.push in
                 Zmq.Socket.connect socket host.push_socket;
@@ -93,18 +93,27 @@ module Make_connections(M: Connection_info) = struct
                 } in (
                 match Hashtbl.add t.push_sockets ~key:host_id ~data:conn with 
                 | `Ok -> 
-                    send t conn.push_socket corr_id header body
+                    Some conn
                 | `Duplicate -> 
                     Lwt_log.info "Had a duplicate when adding a connection.  This should never happen."
                     |> Lwt.ignore_result;
-                    Lwt.return Messaging.Pending_message.Full)
-            | None ->
-                Lwt.return Messaging.Pending_message.Full)
+                    None)
+            | None -> None)
 
-    (*
-    let send_reply t host_id correlation_id header body =
-        Lwt.return_unit
-        *)
+
+    let send_msg t host_id corr_id header body =
+        match get_socket t host_id with
+        | Some conn ->
+            send t conn.push_socket corr_id header body
+        | None -> Lwt.return Messaging.Pending_message.Full
+
+    let send_reply t host_id header body =
+        match get_socket t host_id with
+        | Some conn ->
+            send_msg_int conn.push_socket header body;
+            Lwt.return_unit
+        | None ->
+            Lwt.return_unit
 
     let terminate t =
         Hashtbl.for_all t.push_sockets ~f:(fun b ->
@@ -112,29 +121,11 @@ module Make_connections(M: Connection_info) = struct
             true)
 
     let resolve t h m =
-        match M.deserialize_header h with
-        | Some header -> (
-            let corr_id = M.get_correlation_id header in
-            match Hashtbl.find_and_remove t.pending_messages corr_id with
-            | Some r -> 
-                Lwt.wakeup r.deferred (Messaging.Pending_message.Message (header, m));
-                Lwt.return_unit
-            | None -> Lwt.return_unit)
+        let corr_id = M.get_correlation_id h in
+        match Hashtbl.find_and_remove t.pending_messages corr_id with
+        | Some r -> 
+            Lwt.wakeup r.deferred (Messaging.Pending_message.Message (h, m));
+            Lwt.return_unit
         | None -> Lwt.return_unit
-
-    let start_loop t =
-        let pull_socket = Zmq.Socket.create t.context Zmq.Socket.pull in
-        let pull_socket_lwt = Zmq_lwt.Socket.of_socket pull_socket in 
-        Zmq.Socket.bind pull_socket t.reply_socket;
-        let rec loop_rec () =
-            Zmq_lwt.Socket.recv pull_socket_lwt
-            >>= fun h -> 
-                match Zmq.Socket.has_more pull_socket with
-                | true ->
-                    Zmq_lwt.Socket.recv pull_socket_lwt
-                    >>= (fun m -> resolve t h m)
-                | false -> Lwt.return_unit
-            >>= fun _ -> (loop_rec [@tailcall]) () in 
-        loop_rec ()
 
 end
