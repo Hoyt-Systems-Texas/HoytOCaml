@@ -31,8 +31,8 @@ module Test_connection_info = struct
     let get_correlation_id (header: Message.Header.t) =
         header.correlationId
 
-    let get_respond_host_id _ =
-        1l
+    let get_respond_host_id (header: Message.Header.t) =
+        header.fromId
 end
 
 module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
