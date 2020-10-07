@@ -17,6 +17,8 @@ module type Request_processor = sig
     val from_id : header -> Host_manager.host_id
 
     val send_msg : connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
+
+    val resolve : connection_manager -> header -> encoding -> unit Lwt.t
 end
 
 module Make_Request_processor(R: Request_processor) : sig
@@ -38,7 +40,6 @@ module Make_Request_processor(R: Request_processor) : sig
         Host_manager.host_id -> 
         Host_manager.service_id -> 
         Host_manager.t -> 
-        (R.header -> R.encoding -> unit Lwt.t) ->
         R.connection_manager ->
         t
 

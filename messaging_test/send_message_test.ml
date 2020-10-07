@@ -72,6 +72,9 @@ module Test_processor = struct
 
     let send_msg connections host_id header body =
         Test_connection_manager.send_reply connections host_id header body
+
+    let resolve connection_manager header encoding =
+        Test_connection_manager.resolve connection_manager header encoding
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
@@ -90,7 +93,6 @@ let () =
         2l 
         2l 
         manager
-        (fun h b -> H_c.resolve connections h b) 
         connections in
     let corr_id = H_c.next_id connections in
     let messageType = Message.Header.MessageType.REQ in

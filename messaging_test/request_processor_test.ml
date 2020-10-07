@@ -52,6 +52,9 @@ module Test_processor = struct
         
     let send_msg connection_manager host_id header body =
         Test_connection_manager.send_reply connection_manager host_id header body
+    
+    let resolve connection_manager header encoding =
+        Test_connection_manager.resolve connection_manager header encoding
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
@@ -90,6 +93,5 @@ let () =
         host_id 
         service_id 
         host_manager 
-        (fun _ _ -> Lwt.return_unit) 
         connections in
     Lwt_main.run @@ Service_processor.listen processor

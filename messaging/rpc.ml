@@ -18,6 +18,8 @@ module type Request_processor = sig
     val from_id : header -> Host_manager.host_id
 
     val send_msg : connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
+
+    val resolve : connection_manager -> header -> encoding -> unit Lwt.t
 end
 
 module Make_Request_processor(R: Request_processor) = struct
@@ -33,12 +35,11 @@ module Make_Request_processor(R: Request_processor) = struct
         bind_url: string;
         context: Zmq.Context.t;
         state: state ref;
-        resolve: (R.header -> R.encoding -> unit Lwt.t);
         connection_manager: R.connection_manager;
     }
 
     (* Creates a new request processor. *)
-    let make ctx bind_url host_id service_id host_manager resolve connection_manager =
+    let make ctx bind_url host_id service_id host_manager connection_manager =
         {
             host_id;
             service_id;
@@ -46,7 +47,6 @@ module Make_Request_processor(R: Request_processor) = struct
             bind_url;
             context=ctx;
             state=ref Idle;
-            resolve;
             connection_manager;
         }
 
@@ -57,7 +57,7 @@ module Make_Request_processor(R: Request_processor) = struct
             R.handle_message header msg 
             >>= (fun (h, b) -> R.send_msg t.connection_manager (R.from_id header) h b)
         | M_T.Reply -> 
-            t.resolve header msg
+            R.resolve t.connection_manager header msg
         | M_T.Event -> Lwt.return_unit
         | M_T.Ping -> Lwt.return_unit
         | M_T.Pong -> Lwt.return_unit
