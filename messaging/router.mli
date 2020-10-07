@@ -10,8 +10,12 @@ module type Service_router_info = sig
     (* Gets the id of the user who is making the request. *)
     val get_user_id: header -> int64
 
+    (* Gets the id of the from host. *)
+    val get_from_id: header -> Host_manager.host_id
+
     (* Used to get the message type. *)
     val get_message_type: header -> Messaging.Message_type.t
+
 end
 
 module Make_Service_router(I: Service_router_info) : sig

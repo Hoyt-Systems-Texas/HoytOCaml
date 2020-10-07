@@ -29,13 +29,10 @@ module Make_connections(M: Connection_info) : sig
      * body - The serialized body to send back.  *)
     val send_reply: t -> Host_manager.host_id -> string -> string -> unit Lwt.t
 
-    (*
-    * Used to get the next correlation id to use.
-    *)
+    (* Used to get the next correlation id to use. *)
     val next_id: t -> int64
 
-    (* Closes all of the sockets that are currently opened.
-     *)
+    (* Closes all of the sockets that are currently opened. *)
     val terminate: t -> bool
 
     (* Called to resolve a reply message. *)

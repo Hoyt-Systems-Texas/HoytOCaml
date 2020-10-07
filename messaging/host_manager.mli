@@ -39,6 +39,15 @@ module Service_entry : sig
 
 end
 
+module Router_entry : sig
+
+    type t = {
+        router_id: int32;
+        name: string;
+        push_socket: string;
+    }
+end
+
 (* Used to make a new collection. *)
 val make : host_id -> t
 
@@ -50,6 +59,11 @@ val get_host : t -> host_id -> Host_entry.t option
 
 (* Used to load the hosts and sevices into a dictionary. *)
 val load : t -> Host_entry.t list -> t
+
+(* Loads the router data. *)
+val load_router : t -> Router_entry.t list -> t
+
+val get_routers : t -> Router_entry.t list
 
 (* Checks to see if the host is a end client. *)
 val is_web : host_id -> bool

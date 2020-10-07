@@ -31,6 +31,14 @@ module Service_entry = struct
     }
 end
 
+module Router_entry = struct
+    type t = {
+        router_id: int32;
+        name: string;
+        push_socket: string;
+    }
+end
+
 (* Represents the service entries. *)
 type t = {
 
@@ -39,6 +47,7 @@ type t = {
     services: (service_id,  Service_entry.t) Hashtbl.t;
     (* The lookup for a service by the host id.  Each service endpoint has a unique host id. *)
     hosts: (int32, Host_entry.t) Hashtbl.t;
+    routers: (int32, Router_entry.t) Hashtbl.t;
 }
 
 let make host_id =
@@ -46,6 +55,7 @@ let make host_id =
         host_id;
         services=Hashtbl.create (module Int32);
         hosts=Hashtbl.create (module Int32);
+        routers=Hashtbl.create (module Int32);
     }
 
 let get_service_id t service_id =
@@ -53,6 +63,9 @@ let get_service_id t service_id =
 
 let get_host t host_id =
     Hashtbl.find t.hosts host_id
+
+let get_routers t =
+    Hashtbl.data t.routers
 
 let load t (hosts: Host_entry.t list) =
     let t = List.fold hosts ~init:t ~f:(fun t host ->
@@ -85,6 +98,16 @@ let load t (hosts: Host_entry.t list) =
                         });
                 t)
         | None -> t)
+
+let load_router t entries =
+    List.fold entries ~init:t ~f:(fun t router -> 
+        match Hashtbl.add t.routers ~key:router.Router_entry.router_id ~data:router with
+        | `Ok -> 
+            t
+        | `Duplicate ->
+            Lwt_log.info ("Duplicate router entry " ^ Int32.to_string router.router_id)
+            |> Lwt.ignore_result;
+            t)
 
 let is_web host_id =
     Int32.is_negative host_id

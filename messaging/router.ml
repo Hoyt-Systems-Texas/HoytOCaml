@@ -13,6 +13,8 @@ module type Service_router_info = sig
     (* Gets the id of the user who is making the request. *)
     val get_user_id: header -> int64
 
+    val get_from_id: header -> Host_manager.host_id
+
     (* Used to get the message type. *)
     val get_message_type: header -> Messaging.Message_type.t
 
@@ -25,6 +27,7 @@ module Make_Service_router(I: Service_router_info) = struct
         binding_address: string;
         host_manager: Host_manager.t;
         send_msg: Messaging.send_msg;
+        services_lookup: (int32, Host_manager.Host_entry.t) Hashtbl.t
     }
 
     let make ctx binding_address host_manager send_msg =
@@ -33,6 +36,7 @@ module Make_Service_router(I: Service_router_info) = struct
             binding_address;
             host_manager;
             send_msg;
+            services_lookup=Hashtbl.create (module Int32);
         }
 
     let handle_ping _ _ =
@@ -41,11 +45,30 @@ module Make_Service_router(I: Service_router_info) = struct
     let handle_pong _ _ =
         Lwt.return_unit
 
-    let handle_req _ _ _ =
-        Lwt.return_unit
+    let get_host_for_service t service_id =
+        match Hashtbl.find t.services_lookup service_id with
+        | Some host_entry -> Some host_entry
+        | None -> 
+            (match Host_manager.get_service_id t.host_manager service_id with 
+            | Some service ->
+                (match service.hosts with 
+                | head :: _ -> 
+                    (* Since we already checked to see if it exists we can go ahead and add it.*)
+                    Hashtbl.add_exn t.services_lookup ~key:service_id ~data:head;
+                    Some head
+                | [] -> None)
+            | None -> None)
 
-    let handle_reply _ _ _ =
-        Lwt.return_unit
+    let handle_req t (header_b, header) body =
+        let service_id = I.get_service_id header in
+        match get_host_for_service t service_id with
+        | Some host -> t.send_msg host.host_id header_b body 
+        | None -> Lwt.return_unit
+
+
+    let handle_reply t (header_b, header) body =
+        let host_id = I.get_from_id header in
+        t.send_msg host_id header_b body
 
     let handle_event _ _ _ =
         Lwt.return_unit
