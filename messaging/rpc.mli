@@ -3,6 +3,7 @@ open! Core
 module type Request_processor = sig
     type encoding = string
     type header
+    type connection_manager
 
     (* Used to decode the header of the message. *)
     val decode_header : encoding -> header option
@@ -14,6 +15,8 @@ module type Request_processor = sig
     val message_type : header -> Messaging.Message_type.t
 
     val from_id : header -> Host_manager.host_id
+
+    val send_msg : connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
 end
 
 module Make_Request_processor(R: Request_processor) : sig
@@ -36,7 +39,7 @@ module Make_Request_processor(R: Request_processor) : sig
         Host_manager.service_id -> 
         Host_manager.t -> 
         (R.header -> R.encoding -> unit Lwt.t) ->
-        Messaging.send_msg ->
+        R.connection_manager ->
         t
 
     (* Starts the process for listening on the socket. *)

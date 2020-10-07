@@ -42,6 +42,7 @@ module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connecti
 module Test_processor = struct 
     type encoding = string
     type header = Message.Header.t
+    type connection_manager = Test_connection_manager.t
 
     let decode_header encoding =
         let reader = Ocaml_protoc_plugin.Reader.create encoding in
@@ -67,8 +68,10 @@ module Test_processor = struct
         | M_H_T.REPLY -> H_M_T.Reply
         | M_H_T.EVENT -> H_M_T.Event
 
-    let from_id (h:header) = h.fromId;
+    let from_id (h:header) = h.fromId
 
+    let send_msg connections host_id header body =
+        Test_connection_manager.send_reply connections host_id header body
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
@@ -88,7 +91,7 @@ let () =
         2l 
         manager
         (fun h b -> H_c.resolve connections h b) 
-        (fun host_id h b -> (H_c.send_reply connections host_id h b)) in
+        connections in
     let corr_id = H_c.next_id connections in
     let messageType = Message.Header.MessageType.REQ in
     let payloadType = Some (`User Message.UserMessage.CreateUser) in

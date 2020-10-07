@@ -1,8 +1,28 @@
 open! Core
 
+module Test_connection_info = struct 
+
+    type header = Message.Header.t
+
+    let deserialize_header h =
+        let reader = Ocaml_protoc_plugin.Reader.create h in
+        match Message.Header.from_proto reader with
+        | Ok h -> Some h
+        | Error(_) -> None
+
+    let get_correlation_id (header: Message.Header.t) =
+        header.correlationId
+
+    let get_respond_host_id _ =
+        1l
+end
+
+module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
+
 module Test_processor = struct
     type encoding = string
     type header = Message.Header.t
+    type connection_manager = Test_connection_manager.t
 
     let decode_header b = 
         let result = Ocaml_protoc_plugin.Reader.create b in 
@@ -28,30 +48,13 @@ module Test_processor = struct
         | M_H_T.REPLY -> H_M_T.Reply
         | M_H_T.EVENT -> H_M_T.Event
 
-    let from_id (h:header) = h.fromId;
+    let from_id (h:header) = h.fromId
         
+    let send_msg connection_manager host_id header body =
+        Test_connection_manager.send_reply connection_manager host_id header body
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
-
-module Test_connection_info = struct 
-
-    type header = Message.Header.t
-
-    let deserialize_header h =
-        let reader = Ocaml_protoc_plugin.Reader.create h in
-        match Message.Header.from_proto reader with
-        | Ok h -> Some h
-        | Error(_) -> None
-
-    let get_correlation_id (header: Message.Header.t) =
-        header.correlationId
-
-    let get_respond_host_id _ =
-        1l
-end
-
-module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
 
 let hosts = [
     {
@@ -88,5 +91,5 @@ let () =
         service_id 
         host_manager 
         (fun _ _ -> Lwt.return_unit) 
-        (fun host_id h b -> (H_c.send_reply connections host_id h b)) in
+        connections in
     Lwt_main.run @@ Service_processor.listen processor

@@ -4,6 +4,7 @@ open Lwt.Infix
 module type Request_processor = sig
     type encoding = string
     type header
+    type connection_manager
 
     (* Used to decode the header of the message. *)
     val decode_header : encoding -> header option
@@ -15,6 +16,8 @@ module type Request_processor = sig
     val message_type : header -> Messaging.Message_type.t
 
     val from_id : header -> Host_manager.host_id
+
+    val send_msg : connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
 end
 
 module Make_Request_processor(R: Request_processor) = struct
@@ -31,11 +34,11 @@ module Make_Request_processor(R: Request_processor) = struct
         context: Zmq.Context.t;
         state: state ref;
         resolve: (R.header -> R.encoding -> unit Lwt.t);
-        send_msg: Messaging.send_msg;
+        connection_manager: R.connection_manager;
     }
 
     (* Creates a new request processor. *)
-    let make ctx bind_url host_id service_id host_manager resolve send_msg =
+    let make ctx bind_url host_id service_id host_manager resolve connection_manager =
         {
             host_id;
             service_id;
@@ -44,7 +47,7 @@ module Make_Request_processor(R: Request_processor) = struct
             context=ctx;
             state=ref Idle;
             resolve;
-            send_msg;
+            connection_manager;
         }
 
     let process_message t header msg =
@@ -52,7 +55,7 @@ module Make_Request_processor(R: Request_processor) = struct
         match R.message_type header with
         | M_T.Req -> 
             R.handle_message header msg 
-            >>= (fun (h, b) -> t.send_msg (R.from_id header) h b)
+            >>= (fun (h, b) -> R.send_msg t.connection_manager (R.from_id header) h b)
         | M_T.Reply -> 
             t.resolve header msg
         | M_T.Event -> Lwt.return_unit
