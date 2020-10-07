@@ -27,6 +27,8 @@ module Make_Request_processor(R: Request_processor) : sig
      * host_id - The id for this host.
      * service_id - The id for this service.
      * host_manager - The host manager containing the location of all the services and hosts.
+     * decode_header - Decodes the header.
+     * update_sender - Updates the host id.
      *)
     val make : Zmq.Context.t -> 
         string ->  
@@ -34,7 +36,7 @@ module Make_Request_processor(R: Request_processor) : sig
         Host_manager.service_id -> 
         Host_manager.t -> 
         (R.header -> R.encoding -> unit Lwt.t) ->
-        (Host_manager.host_id -> R.encoding -> R.encoding -> unit Lwt.t) ->
+        Messaging.send_msg ->
         t
 
     (* Starts the process for listening on the socket. *)

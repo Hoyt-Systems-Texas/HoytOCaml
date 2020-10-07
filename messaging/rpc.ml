@@ -31,7 +31,7 @@ module Make_Request_processor(R: Request_processor) = struct
         context: Zmq.Context.t;
         state: state ref;
         resolve: (R.header -> R.encoding -> unit Lwt.t);
-        send_msg: (Host_manager.host_id -> R.encoding -> R.encoding -> unit Lwt.t);
+        send_msg: Messaging.send_msg;
     }
 
     (* Creates a new request processor. *)

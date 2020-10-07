@@ -50,3 +50,6 @@ val get_host : t -> host_id -> Host_entry.t option
 
 (* Used to load the hosts and sevices into a dictionary. *)
 val load : t -> Host_entry.t list -> t
+
+(* Checks to see if the host is a end client. *)
+val is_web : host_id -> bool

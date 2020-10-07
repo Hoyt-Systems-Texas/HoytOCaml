@@ -85,3 +85,6 @@ let load t (hosts: Host_entry.t list) =
                         });
                 t)
         | None -> t)
+
+let is_web host_id =
+    Int32.is_negative host_id

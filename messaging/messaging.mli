@@ -22,3 +22,7 @@ module Message_type : sig
         | Event
         | Status
 end
+
+type encoding = string
+
+type send_msg = (Host_manager.host_id -> encoding -> encoding -> unit Lwt.t)

@@ -1,3 +1,5 @@
+open! Core
+
 module Pending_message = struct
 
     type 'a t =
@@ -18,3 +20,7 @@ module Message_type = struct
         | Status
     
 end
+
+type encoding = string
+
+type send_msg = (Host_manager.host_id -> encoding -> encoding -> unit Lwt.t)
