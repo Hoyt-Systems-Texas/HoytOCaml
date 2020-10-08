@@ -94,6 +94,7 @@ module Make_Service_router(I: Service_router_info) = struct
     let listen t =
         let pull_socket = Zmq.Socket.create t.ctx Zmq.Socket.pull in 
         let pull_socket_lwt = Zmq_lwt.Socket.of_socket pull_socket in 
+        Zmq.Socket.bind pull_socket t.binding_address;
         let rec spin_loop () =
             Zmq_lwt.Socket.recv pull_socket_lwt
             >>= (fun header -> 

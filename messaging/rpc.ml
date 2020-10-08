@@ -6,20 +6,23 @@ module type Request_processor = sig
     type header
     type connection_manager
 
-    (* Used to decode the header of the message. *)
     val decode_header : encoding -> header option
+    (** Used to decode the header of the message. *)
 
-    (* Used to handle the incoming of the message. *)
     val handle_message : header -> encoding -> (encoding * encoding) Lwt.t
+    (** Used to handle the incoming of the message. *)
 
-    (* Used to get the message type. *)
     val message_type : header -> Messaging.Message_type.t
+    (** Used to get the message type. *)
 
     val from_id : header -> Host_manager.host_id
+    (** Gets the id of who the message is from. *)
 
     val send_msg : connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
+    (** Used to send a message back. *)
 
     val resolve : connection_manager -> header -> encoding -> unit Lwt.t
+    (** Resolves a message. *)
 end
 
 module Make_Request_processor(R: Request_processor) = struct
@@ -38,7 +41,6 @@ module Make_Request_processor(R: Request_processor) = struct
         connection_manager: R.connection_manager;
     }
 
-    (* Creates a new request processor. *)
     let make ctx bind_url host_id service_id host_manager connection_manager =
         {
             host_id;
@@ -49,6 +51,7 @@ module Make_Request_processor(R: Request_processor) = struct
             state=ref Idle;
             connection_manager;
         }
+    (** Creates a new request processor. *)
 
     let process_message t header msg =
         let module M_T = Messaging.Message_type in

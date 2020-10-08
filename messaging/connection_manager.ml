@@ -1,4 +1,4 @@
-open! Core
+open! Core 
 
 module type Connection_info = sig
     type header
@@ -147,6 +147,22 @@ module Make_connections(M: Connection_info) = struct
                 | [] -> Lwt.return_unit
         else
             send_reply t host_id header body
+
+    let send_to_router t correlation_id header body =
+        let router = t.router_socket in
+        match !router with
+        | Some r ->
+            send t r.push_socket correlation_id header body
+        | None ->
+            match Host_manager.get_routers t.host_manager with
+            | head :: _ ->
+                let push_socket = Zmq.Socket.create t.context Zmq.Socket.push in 
+                router := Some {
+                    Router_entry.router_id = head.router_id;
+                    push_socket
+                };
+                send t push_socket correlation_id header body
+            | [] -> Lwt.return Messaging.Pending_message.UnableToRoute
 
     let terminate t =
         ignore(Hashtbl.for_all t.push_sockets ~f:(fun b ->

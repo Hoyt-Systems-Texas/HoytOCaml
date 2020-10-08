@@ -48,22 +48,23 @@ module Router_entry : sig
     }
 end
 
-(* Used to make a new collection. *)
 val make : host_id -> t
+(** Used to make a new collection. *)
 
-(* Gets the id of the service. *)
 val get_service_id : t -> service_id -> Service_entry.t option
+(** Gets the id of the service. *)
 
-(* Used to get a host with the specified id. *)
 val get_host : t -> host_id -> Host_entry.t option
+(** Used to get a host with the specified id. *)
 
-(* Used to load the hosts and sevices into a dictionary. *)
 val load : t -> Host_entry.t list -> t
+(** Used to load the hosts and sevices into a dictionary. *)
 
-(* Loads the router data. *)
 val load_router : t -> Router_entry.t list -> t
+(** Loads the router data. *)
 
 val get_routers : t -> Router_entry.t list
+(** Gets the list of possible routers to use. *)
 
-(* Checks to see if the host is a end client. *)
 val is_web : host_id -> bool
+(** Checks to see if the host is a end client. *)

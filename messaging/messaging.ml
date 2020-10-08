@@ -6,6 +6,7 @@ module Pending_message = struct
         | Timeout
         | Message of 'a * string
         | Full
+        | UnableToRoute
 
 end
 
