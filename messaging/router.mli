@@ -17,6 +17,7 @@ module type Service_router_info = sig
     (* Used to get the message type. *)
     val get_message_type: header -> Messaging.Message_type.t
 
+    val send_msg: connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
 end
 
 module Make_Service_router(I: Service_router_info) : sig
@@ -32,7 +33,7 @@ module Make_Service_router(I: Service_router_info) : sig
     val make : Zmq.Context.t ->
         string ->
         Host_manager.t ->
-        Messaging.send_msg ->
+        I.connection_manager ->
         t
 
     (* Starts the main listener to forward the messages. *)

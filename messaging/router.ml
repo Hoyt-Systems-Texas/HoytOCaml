@@ -19,6 +19,7 @@ module type Service_router_info = sig
     (* Used to get the message type. *)
     val get_message_type: header -> Messaging.Message_type.t
 
+    val send_msg: connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
 end
 
 module Make_Service_router(I: Service_router_info) = struct
@@ -27,17 +28,17 @@ module Make_Service_router(I: Service_router_info) = struct
         ctx: Zmq.Context.t;
         binding_address: string;
         host_manager: Host_manager.t;
-        send_msg: Messaging.send_msg;
-        services_lookup: (int32, Host_manager.Host_entry.t) Hashtbl.t
+        services_lookup: (int32, Host_manager.Host_entry.t) Hashtbl.t;
+        connection_manager: I.connection_manager;
     }
 
-    let make ctx binding_address host_manager send_msg =
+    let make ctx binding_address host_manager connection_manager=
         {
             ctx;
             binding_address;
             host_manager;
-            send_msg;
             services_lookup=Hashtbl.create (module Int32);
+            connection_manager;
         }
 
     let handle_ping _ _ =
@@ -63,13 +64,13 @@ module Make_Service_router(I: Service_router_info) = struct
     let handle_req t (header_b, header) body =
         let service_id = I.get_service_id header in
         match get_host_for_service t service_id with
-        | Some host -> t.send_msg host.host_id header_b body 
+        | Some host -> I.send_msg t.connection_manager host.host_id header_b body 
         | None -> Lwt.return_unit
 
 
     let handle_reply t (header_b, header) body =
         let host_id = I.get_from_id header in
-        t.send_msg host_id header_b body
+        I.send_msg t.connection_manager host_id header_b body
 
     let handle_event _ _ _ =
         Lwt.return_unit
