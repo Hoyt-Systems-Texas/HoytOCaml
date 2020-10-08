@@ -4,6 +4,7 @@ open Lwt.Infix
 module type Service_router_info = sig
     type encoding = string
     type header
+    type connection_manager
 
     val decode_header:  encoding -> header option
 

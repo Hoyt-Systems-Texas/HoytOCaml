@@ -20,6 +20,18 @@ module Socket_entry = struct
         Zmq.Socket.close t.push_socket
 end
 
+module Router_entry = struct
+    type t = {
+        (* The id of th erouter. *)
+        router_id: int32;
+        (* The socket to send the data to. *)
+        push_socket: [`Push] Zmq.Socket.t;
+    }
+
+    let close t =
+        Zmq.Socket.close t.push_socket
+end
+
 module Pending_message = struct
     type 'a t = {
         correlation_id: int64;
@@ -42,6 +54,7 @@ module Make_connections(M: Connection_info) = struct
         context: Zmq.Context.t;
         (* The address for the reply sockets. *)
         pending_messages: (int64, M.header Pending_message.t) Hashtbl.t;
+        router_socket: Router_entry.t option ref;
     }
 
     let make ctx host_manager =
@@ -53,6 +66,7 @@ module Make_connections(M: Connection_info) = struct
             push_sockets;
             host_manager;
             pending_messages;
+            router_socket=ref None;
         }
 
     let send_msg_int socket header body =
@@ -113,10 +127,34 @@ module Make_connections(M: Connection_info) = struct
         | None ->
             Lwt.return_unit
 
+    let routable_message t host_id header body =
+        if Int32.is_negative host_id then
+            let router = t.router_socket in 
+            match !router with 
+            | Some r -> 
+                send_msg_int r.push_socket header body;
+                Lwt.return_unit
+            | None -> 
+                match Host_manager.get_routers t.host_manager with 
+                | head :: _ -> 
+                    let push_socket = Zmq.Socket.create t.context Zmq.Socket.push in
+                    router := Some {
+                        Router_entry.router_id = head.router_id;
+                        push_socket;
+                    };
+                    send_msg_int push_socket header body;
+                    Lwt.return_unit
+                | [] -> Lwt.return_unit
+        else
+            send_reply t host_id header body
+
     let terminate t =
-        Hashtbl.for_all t.push_sockets ~f:(fun b ->
+        ignore(Hashtbl.for_all t.push_sockets ~f:(fun b ->
             Socket_entry.close b;
-            true)
+            true): bool);
+        match !(t.router_socket) with
+        | Some s -> Router_entry.close s
+        | None -> ()
 
     let resolve t h m =
         let corr_id = M.get_correlation_id h in

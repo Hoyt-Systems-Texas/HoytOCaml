@@ -50,11 +50,9 @@ module Test_processor = struct
 
     let from_id (h:header) = h.fromId
         
-    let send_msg connection_manager host_id header body =
-        Test_connection_manager.send_reply connection_manager host_id header body
+    let send_msg = Test_connection_manager.send_reply
     
-    let resolve connection_manager header encoding =
-        Test_connection_manager.resolve connection_manager header encoding
+    let resolve = Test_connection_manager.resolve
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)

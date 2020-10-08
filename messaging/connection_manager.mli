@@ -33,7 +33,9 @@ module Make_connections(M: Connection_info) : sig
     val next_id: t -> int64
 
     (* Closes all of the sockets that are currently opened. *)
-    val terminate: t -> bool
+    val terminate: t -> unit
+
+    val routable_message: t -> Host_manager.host_id -> string -> string -> unit Lwt.t
 
     (* Called to resolve a reply message. *)
     val resolve: t -> M.header -> string -> unit Lwt.t

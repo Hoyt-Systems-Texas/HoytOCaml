@@ -70,11 +70,9 @@ module Test_processor = struct
 
     let from_id (h:header) = h.fromId
 
-    let send_msg connections host_id header body =
-        Test_connection_manager.send_reply connections host_id header body
+    let send_msg = Test_connection_manager.send_reply
 
-    let resolve connection_manager header encoding =
-        Test_connection_manager.resolve connection_manager header encoding
+    let resolve  = Test_connection_manager.resolve
 end
 
 module Service_processor = Hoyt_messaging.Rpc.Make_Request_processor(Test_processor)
@@ -114,7 +112,7 @@ let () =
         (Service_processor.listen rpc |> Lwt.ignore_result; Lwt.return_unit
         >>= (fun _ -> H_c.send_msg connections 1l corr_id header "m")
         >>= (fun _ -> print_endline "Message sent..."; 
-            ignore (H_c.terminate connections: bool);
+            H_c.terminate connections;
             Zmq.Context.terminate ctx;
             Lwt.return_unit));
     ()

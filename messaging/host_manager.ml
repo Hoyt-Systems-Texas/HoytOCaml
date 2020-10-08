@@ -47,6 +47,7 @@ type t = {
     services: (service_id,  Service_entry.t) Hashtbl.t;
     (* The lookup for a service by the host id.  Each service endpoint has a unique host id. *)
     hosts: (int32, Host_entry.t) Hashtbl.t;
+    (* The list of the routers to use. *)
     routers: (int32, Router_entry.t) Hashtbl.t;
 }
 
