@@ -73,17 +73,16 @@ let hosts = [
         sub_socket="tcp://localhost:5003";
         push_socket="tcp://localhost:5004";
         pull_socket="tcp://localhost:4001";
-    }
-]
-
-let router = [
+    };
     {
-        Hoyt_messaging.Host_manager.Router_entry.router_id = 1l;
-        name="test Router";
-        push_socket="tcp://localhost:4000"
-    }
+        host_id=(-1l);
+        service_id=None;
+        name="Web 1";
+        sub_socket="tcp://localhost:3000";
+        push_socket="tcp://localhost:3001";
+        pull_socket="tcp://localhost:4002";
+    };
 ]
-
 
 let () =
     let ctx = Zmq.Context.create () in 
@@ -91,9 +90,7 @@ let () =
     let service_id = 1l in 
     let bind_url = "tcp://*:5002" in 
     let module H_c = Test_connection_manager in
-    let host_manager = Hoyt_messaging.Host_manager.make 1l in
-    let host_manager = Hoyt_messaging.Host_manager.load host_manager hosts in
-    let host_manager = Hoyt_messaging.Host_manager.load_router host_manager router in
+    let host_manager = Hosts_config.create_host_manager 1l in
     let connections = H_c.make ctx host_manager in
     let processor = Service_processor.make ctx 
         bind_url 

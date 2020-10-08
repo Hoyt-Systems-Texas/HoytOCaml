@@ -68,7 +68,7 @@ let get_host t host_id =
 let get_routers t =
     Hashtbl.data t.routers
 
-let load t (hosts: Host_entry.t list) =
+let load (hosts: Host_entry.t list) t =
     let t = List.fold hosts ~init:t ~f:(fun t host ->
         match Hashtbl.add t.hosts ~key:host.host_id ~data:host with 
         | `Ok -> 
@@ -100,7 +100,7 @@ let load t (hosts: Host_entry.t list) =
                 t)
         | None -> t)
 
-let load_router t entries =
+let load_router entries t =
     List.fold entries ~init:t ~f:(fun t router -> 
         match Hashtbl.add t.routers ~key:router.Router_entry.router_id ~data:router with
         | `Ok -> 
