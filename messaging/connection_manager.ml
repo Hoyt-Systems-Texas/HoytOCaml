@@ -138,6 +138,8 @@ module Make_connections(M: Connection_info) = struct
                 match Host_manager.get_routers t.host_manager with 
                 | head :: _ -> 
                     let push_socket = Zmq.Socket.create t.context Zmq.Socket.push in
+                    print_endline @@ "Connectiont to router: " ^ head.push_socket;
+                    Zmq.Socket.connect push_socket head.push_socket;
                     router := Some {
                         Router_entry.router_id = head.router_id;
                         push_socket;
@@ -157,6 +159,8 @@ module Make_connections(M: Connection_info) = struct
             match Host_manager.get_routers t.host_manager with
             | head :: _ ->
                 let push_socket = Zmq.Socket.create t.context Zmq.Socket.push in 
+                Zmq.Socket.connect push_socket head.push_socket;
+                print_endline @@ "Connection to router: " ^ head.push_socket;
                 router := Some {
                     Router_entry.router_id = head.router_id;
                     push_socket

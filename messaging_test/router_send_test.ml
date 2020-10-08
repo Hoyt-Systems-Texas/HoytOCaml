@@ -1,29 +1,41 @@
 open! Core
 open! Lwt.Infix
 
-module Test_connection_info = struct 
-
-    type header = Message.Header.t
-
-    let deserialize_header h =
-        let reader = Ocaml_protoc_plugin.Reader.create h in
-        match Message.Header.from_proto reader with
-        | Ok h -> Some h
-        | Error(_) -> None
-
-    let get_correlation_id (header: Message.Header.t) =
-        header.correlationId
-
-    let get_respond_host_id _ =
-        1l
-end
-
-module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
-
-let router = [
-    {
-        Hoyt_messaging.Host_manager.Router_entry.router_id = 1l;
-        name="test Router";
-        push_socket="tcp://localhost:4000"
-    }
-]
+let () =
+    let module H_m = Hoyt_messaging.Host_manager in 
+    let module H_c = Reply_processor.Test_connection_manager in
+    let manager = Hosts_config.create_host_manager 1l in 
+    let bind_url = "tcp://*:3001" in 
+    let ctx = Zmq.Context.create () in
+    let connections = H_c.make ctx manager in
+    let rpc = Reply_processor.Service_processor.make 
+        ctx 
+        bind_url 
+        2l 
+        2l 
+        manager
+        connections in
+    let corr_id = H_c.next_id connections in
+    let messageType = Message.Header.MessageType.REQ in
+    let payloadType = Some (`User Message.UserMessage.CreateUser) in
+    let status = Message.Header.Status.NA in
+    let header = {
+        Message.Header.fromId=(-1l);
+        Message.Header.toId=1l;
+        correlationId=corr_id;
+        userId=1L;
+        organizationId=1l;
+        messageType;
+        payloadType;
+        status;
+    } in
+    let header = Message.Header.to_proto header in
+    let header = Ocaml_protoc_plugin.Writer.contents header in
+    Lwt_main.run
+        (Reply_processor.Service_processor.listen rpc |> Lwt.ignore_result; Lwt.return_unit
+        >>= (fun _ -> H_c.send_to_router connections corr_id header "m")
+        >>= (fun _ -> print_endline "Message sent..."; 
+            H_c.terminate connections;
+            Zmq.Context.terminate ctx;
+            Lwt.return_unit));
+    ()

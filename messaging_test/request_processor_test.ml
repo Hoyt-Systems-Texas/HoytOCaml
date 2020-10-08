@@ -50,7 +50,7 @@ module Test_processor = struct
 
     let from_id (h:header) = h.fromId
         
-    let send_msg = Test_connection_manager.send_reply
+    let send_msg = Test_connection_manager.routable_message
     
     let resolve = Test_connection_manager.resolve
 end
