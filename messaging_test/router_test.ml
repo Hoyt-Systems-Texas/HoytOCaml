@@ -56,7 +56,6 @@ end
 
 module Router_test = Hoyt_messaging.Router.Make_Service_router(Router_info)
 
-
 module Test_processor = struct
     type encoding = string
     type header = Message.Header.t
