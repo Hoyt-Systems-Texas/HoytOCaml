@@ -1,0 +1,4 @@
+(library
+ (name Hoyt_security)
+ (libraries core mirage-crypto base64 mirage-crypto-rng mirage-crypto-rng.unix)
+ (preprocess (pps ppx_jane ppx_compare)))
