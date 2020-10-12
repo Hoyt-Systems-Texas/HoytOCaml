@@ -9,33 +9,33 @@ type host_id = int32
 
 module Host_entry : sig
 
-    (* An entry for a subscription. *)
     type t = {
-        (* The id of the service. *)
         service_id: int32 option;
-        (* A name for the service.  Not used for lookup.*)
+        (** The id of the service. *)
         name: string;
-        (* The id of the host. *)
+        (** A name for the service.  Not used for lookup.*)
         host_id: int32;
-        (* The location for the subscribtion in a socket.*)
+        (** The id of the host. *)
         sub_socket: string;
-        (* The push socket for to sending rpc and heartbeat request to. *)
+        (** The location for the subscribtion in a socket.*)
         push_socket: string;
-        (* The pull socket for the rpc calls. *)
+        (** The push socket for to sending rpc and heartbeat request to. *)
         pull_socket: string;
+        (** The pull socket for the rpc calls. *)
     }
+    (** An entry for a subscription. *)
 
 end
 
 module Service_entry : sig
 
-    (* Represents the service entries. *)
     type t = {
-        (* The id of the service the entry is for. *)
         service_id: int32;
-        (* The list of hosts for the service. *)
+        (** The id of the service the entry is for. *)
         hosts: Host_entry.t list;
+        (** The list of hosts for the service. *)
     }
+    (** Represents the service entries. *)
 
 end
 
@@ -43,8 +43,11 @@ module Router_entry : sig
 
     type t = {
         router_id: int32;
+        (** The id of the router id. *)
         name: string;
+        (** the name of the router. *)
         push_socket: string;
+        (** The push socket used to connect to this router.*)
     }
 end
 

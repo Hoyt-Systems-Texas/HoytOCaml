@@ -2,18 +2,18 @@ module type Subscriber_info = sig
     type encoding = string
     type header
 
-    (* Used to deserialize a header. *)
     val decode_header : encoding -> header option
+    (** Used to deserialize a header. *)
 
-    (* Creates a message for send a ping. *)
     val ping : int64 -> encoding
+    (** Creates a message for send a ping. *)
 
-    (* The handler for the incoming message. *)
     val handle_message : header -> encoding -> unit
+    (** The handler for the incoming message. *)
 
 end
 
-(* Used to create something to handle a subscriber.*)
+(** Used to create something to handle a subscriber.*)
 module Make_Subscriber_info_zeromq(S: Subscriber_info) : sig
     type t
 
