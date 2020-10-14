@@ -22,6 +22,7 @@ end
 module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
 
 module Test_processor = struct 
+    type t = unit
     type encoding = string
     type header = Message.Header.t
     type connection_manager = Test_connection_manager.t

@@ -20,6 +20,7 @@ end
 module Test_connection_manager = Hoyt_messaging.Connection_manager.Make_connections(Test_connection_info)
 
 module Test_processor = struct
+    type t = string
     type encoding = string
     type header = Message.Header.t
     type connection_manager = Test_connection_manager.t
@@ -97,5 +98,6 @@ let () =
         host_id 
         service_id 
         host_manager 
-        connections in
+        connections
+        "" in
     Lwt_main.run @@ Service_processor.listen processor

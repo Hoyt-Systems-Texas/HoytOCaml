@@ -1,6 +1,7 @@
 open! Core
 
 module type Request_processor = sig
+    type t
     type encoding = string
     type header
     type connection_manager
@@ -35,6 +36,7 @@ module Make_Request_processor(R: Request_processor) : sig
         Host_manager.service_id -> 
         Host_manager.t -> 
         R.connection_manager ->
+        R.t ->
         t
     (** Creates a new request processor. 
       Arguments: 

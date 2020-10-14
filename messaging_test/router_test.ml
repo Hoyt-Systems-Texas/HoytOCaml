@@ -57,6 +57,7 @@ end
 module Router_test = Hoyt_messaging.Router.Make_Service_router(Router_info)
 
 module Test_processor = struct
+    type t = unit
     type encoding = string
     type header = Message.Header.t
     type connection_manager = Test_connection_manager.t
@@ -105,7 +106,8 @@ let () =
         ctx 
         bind_url
         host_manager
-        connections in 
+        connections
+     in 
     Lwt_main.run @@
         Router_test.listen router
         

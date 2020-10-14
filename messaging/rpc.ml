@@ -2,6 +2,7 @@ open Core
 open Lwt.Infix
 
 module type Request_processor = sig
+    type t
     type encoding = string
     type header
     type connection_manager
@@ -39,9 +40,10 @@ module Make_Request_processor(R: Request_processor) = struct
         context: Zmq.Context.t;
         state: state ref;
         connection_manager: R.connection_manager;
+        r_t: R.t;
     }
 
-    let make ctx bind_url host_id service_id host_manager connection_manager =
+    let make ctx bind_url host_id service_id host_manager connection_manager r_t=
         {
             host_id;
             service_id;
@@ -50,6 +52,7 @@ module Make_Request_processor(R: Request_processor) = struct
             context=ctx;
             state=ref Idle;
             connection_manager;
+            r_t;
         }
     (** Creates a new request processor. *)
 

@@ -14,7 +14,8 @@ let () =
         2l 
         2l 
         manager
-        connections in
+        connections
+        () in
     let corr_id = H_c.next_id connections in
     let messageType = Message.Header.MessageType.REQ in
     let payloadType = Some (`User Message.UserMessage.CreateUser) in
