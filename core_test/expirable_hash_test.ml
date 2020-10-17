@@ -39,3 +39,12 @@ let%test_unit "Clean value remove test"=
   [%test_eq: [`Ok | `Duplicate]] (Expirable_hash.add table 1L 2) `Ok;
   Expirable_hash.clean table;
   [%test_eq: int option] (Expirable_hash.get table 1L) (None)
+
+let%test_unit "Clean value remove test"=
+  let span = Time_ns.Span.create ~ms:(1) () in
+  let table = Expirable_hash.make (module Int64) span in
+  [%test_eq: [`Ok | `Duplicate]] (Expirable_hash.add table 1L 2) `Ok;
+  [%test_eq: int option] (Expirable_hash.get table 1L) (Some(2));
+  Thread.delay 0.005;
+  Expirable_hash.clean table;
+  [%test_eq: int option] (Expirable_hash.get table 1L) (Some(2))
