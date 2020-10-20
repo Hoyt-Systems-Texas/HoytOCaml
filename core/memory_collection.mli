@@ -31,6 +31,9 @@ module Make_data_type(D: Data_type) : sig
   val update : t -> D.key -> D.record -> unit
   (** Used to add or update a value in the database. *)
 
+  val refresh : t -> D.key -> unit
+  (** Used to get a refresh. *)
+
   val get : t -> D.key -> D.record DataStoreResult.t Lwt.t
   (** Used to get a value from the cache. *)
 end
