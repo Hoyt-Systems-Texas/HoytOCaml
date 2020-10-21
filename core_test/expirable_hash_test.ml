@@ -1,7 +1,6 @@
 open Core
 open HoytCore
 
-
 let%test_unit "Skip queue add test" =
   let span = Time_ns.Span.create ~sec:(30) () in
   let table = Expirable_hash.make (module Int64) span in
