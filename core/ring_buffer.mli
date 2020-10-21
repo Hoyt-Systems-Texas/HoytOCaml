@@ -1,6 +1,7 @@
 open! Core
 
 type 'a t
+(** A very simple ring buffer that uses power of 2 for the size. *)
 
 val make: int32 -> int64 -> 'a t option
 (** Creats a new buffer. [size] of the ring buffer. [start_num] the starting number for the buffer.*)
