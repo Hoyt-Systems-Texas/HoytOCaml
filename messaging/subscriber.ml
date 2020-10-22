@@ -4,9 +4,6 @@ open Lwt.Infix
 module type Subscriber_info = sig
   include Common.Common_processor
 
-  (* Creates a message for send a ping. *)
-  val ping : int64 -> encoding
-
   (* The handler for the incoming message. *)
   val handle_message : header -> encoding -> unit Lwt.t
 end
@@ -28,7 +25,20 @@ module Make_Subscriber_info_zeromq(S: Subscriber_info) = struct
       service_id=service_id;
     }
 
-  let event_loop _t socket =
+  let handle_pong _ _ =
+    Lwt.return_unit
+  
+  let handle_event t header body =
+    match S.message_type header with 
+    | Messaging.Message_type.Pong -> handle_pong t header 
+    | Messaging.Message_type.Ping -> Lwt.return_unit
+    | Messaging.Message_type.Event -> 
+      S.handle_message header body
+    | Messaging.Message_type.Reply -> Lwt.return_unit
+    | Messaging.Message_type.Req -> Lwt.return_unit
+    | Messaging.Message_type.Status -> Lwt.return_unit
+
+  let event_loop t socket =
     let socket_lwt = Zmq_lwt.Socket.of_socket socket in
     let rec handler_loop () =
       Zmq_lwt.Socket.recv socket_lwt
@@ -36,7 +46,7 @@ module Make_Subscriber_info_zeromq(S: Subscriber_info) = struct
         match (S.decode_header msg, Zmq.Socket.has_more socket) with
         | (Some header, true) -> 
           Zmq_lwt.Socket.recv socket_lwt
-          >>= fun msg -> S.handle_message header msg
+          >>= fun msg -> handle_event t header msg
         | _ -> Lwt.return_unit
       )
       >>= fun _ -> handler_loop () in
