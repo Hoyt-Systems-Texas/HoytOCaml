@@ -22,6 +22,10 @@ module Make_message_publish(P: Publisher_type) = struct
   let bind t =
     Zmq.Socket.bind t.socket t.binding_url
 
-  let notify _ _ _ = Lwt.return_unit
-  
+  let notify t header body =
+    let header = P.encode_header header in
+    Zmq.Socket.send t.socket header ~more:true;
+    Zmq.Socket.send t.socket body;
+    Lwt.return_unit
+
 end

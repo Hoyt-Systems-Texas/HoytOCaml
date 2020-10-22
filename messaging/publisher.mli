@@ -9,6 +9,7 @@ module Make_message_publish(P: Publisher_type) : sig
   (** Creates a new publisher. *)
 
   val bind: t -> unit
+  (** Binds to the specified uri. *)
 
   val notify: t -> P.header -> P.encoding -> unit Lwt.t
   (** Broadcasts a message to the listenting services. *)
