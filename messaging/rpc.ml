@@ -42,6 +42,10 @@ module Make_Request_processor(R: Request_processor) = struct
         }
     (** Creates a new request processor. *)
 
+    let handle_ping t h =
+        let h = R.set_message_type h Messaging.Message_type.Pong in
+        R.send_msg t.connection_manager (R.from_id h) (R.encode_header h) ""
+
     let process_message t header msg =
         let module M_T = Messaging.Message_type in
         match R.message_type header with
@@ -51,8 +55,7 @@ module Make_Request_processor(R: Request_processor) = struct
         | M_T.Reply -> 
             R.resolve t.connection_manager header msg
         | M_T.Event -> Lwt.return_unit
-        | M_T.Ping -> 
-            Lwt.return_unit
+        | M_T.Ping -> handle_ping t header
         | M_T.Pong -> Lwt.return_unit
         | M_T.Status -> Lwt.return_unit
 

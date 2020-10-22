@@ -31,8 +31,9 @@ module Make_Service_router(I: Service_router_info) = struct
             connection_manager;
         }
 
-    let handle_ping _ _ =
-        Lwt.return_unit
+    let handle_ping t h =
+        let h = I.set_message_type h Messaging.Message_type.Pong in
+        I.send_msg t.connection_manager (I.from_id h) (I.encode_header h) ""
 
     let handle_pong _ _ =
         Lwt.return_unit
