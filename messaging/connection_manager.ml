@@ -54,7 +54,9 @@ module Make_connections(M: Connection_info) = struct
         context: Zmq.Context.t;
         (* The address for the reply sockets. *)
         pending_messages: (int64, M.header Pending_message.t) Hashtbl.t;
+        (** The pending messages for an RPC call.*)
         router_socket: Router_entry.t option ref;
+        (** The defualt router socket to send a message to. *)
     }
 
     let make ctx host_manager =
