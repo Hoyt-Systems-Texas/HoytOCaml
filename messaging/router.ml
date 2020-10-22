@@ -2,11 +2,7 @@ open! Core
 open Lwt.Infix
 
 module type Service_router_info = sig
-    type encoding = string
-    type header
-    type connection_manager
-
-    val decode_header:  encoding -> header option
+    include Common.Common_processor
 
     (* The id of the service to send the message to. *)
     val get_service_id: header -> int32
@@ -14,12 +10,6 @@ module type Service_router_info = sig
     (* Gets the id of the user who is making the request. *)
     val get_user_id: header -> int64
 
-    val get_from_id: header -> Host_manager.host_id
-
-    (* Used to get the message type. *)
-    val get_message_type: header -> Messaging.Message_type.t
-
-    val send_msg: connection_manager -> Host_manager.host_id -> encoding -> encoding -> unit Lwt.t
 end
 
 module Make_Service_router(I: Service_router_info) = struct
@@ -69,7 +59,7 @@ module Make_Service_router(I: Service_router_info) = struct
 
 
     let handle_reply t (header_b, header) body =
-        let host_id = I.get_from_id header in
+        let host_id = I.from_id header in
         I.send_msg t.connection_manager host_id header_b body
 
     let handle_event _ _ _ =
@@ -82,7 +72,7 @@ module Make_Service_router(I: Service_router_info) = struct
         let module M_t = Messaging.Message_type in
         match I.decode_header header with
         | Some h -> 
-            (match I.get_message_type h with 
+            (match I.message_type h with 
             | M_t.Ping -> handle_ping t h
             | M_t.Pong -> handle_pong t h
             | M_t.Req -> handle_req t (header, h) body
