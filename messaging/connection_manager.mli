@@ -67,4 +67,6 @@ module Make_connections(M: Connection_info) : sig
       [host_manager] the host manager to handle the connections.
      *)
 
+    val session_id: t -> int64
+
 end 

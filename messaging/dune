@@ -1,4 +1,4 @@
 (library
  (name Hoyt_messaging)
- (libraries core zmq zmq-lwt lwt_log)
+ (libraries core zmq zmq-lwt lwt_log HoytCore Hoyt_security)
  (preprocess (pps ppx_jane ppx_compare)))
