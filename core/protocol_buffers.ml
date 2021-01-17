@@ -5,3 +5,8 @@ let nullable_string s =
     None
   else
     Some s
+
+let to_proto_string s =
+  match s with
+  | Some s -> s
+  | None -> ""
