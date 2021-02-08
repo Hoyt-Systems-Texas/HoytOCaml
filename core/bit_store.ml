@@ -1,3 +1,4 @@
+(* Decided to not use core here and the native library. *)
 let shift = 6
 let pos_mask = 63L
 

@@ -1,3 +1,7 @@
+(** Used to store as efficient as possible in bits of an int64.  It is useful for 
+searching for data and keeping it small so if fits into the cpu caches.  Uses the BigArray
+type to prevent boxing of the values. *)
+
 type t
 
 (** Creates a new bit store.
