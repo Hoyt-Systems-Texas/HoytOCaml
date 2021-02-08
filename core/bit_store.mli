@@ -16,3 +16,9 @@ val length: t -> int
 @param pos The position to read in the value for. 
 @returns The value at the position. *)
 val read: t -> int64 -> int64
+
+(** writes a value at the position.
+@param t The bit store to update with theh new value.
+@param pos The position to write the value to.
+@param value The value to write at that position. *)
+val write: t -> int64 -> int64 -> unit

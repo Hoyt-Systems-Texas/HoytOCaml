@@ -71,19 +71,62 @@ let read t pos =
 
   (* Now get the end of the value. *)
   let (end_, shfit_bits) = end_ t start remainder in
-  (* This value will either be 1 or 0. *)
-  let has_remainder = end_ - start in
-  let has_remainder64 = Int64.of_int has_remainder in
-  (* Now we need to get the mask for the reminder. If the remainder is 0 the value mask is zero.
-  All the other operations below will not do anything due to it being 0. *)
-  let value_mask = Int64.shift_left has_remainder64 shfit_bits in
-  let value_mask = Int64.sub value_mask has_remainder64 in
-  (* Get the end value.*)
-  let end_value = A.get t.values end_ in
-  (* We got the last part of the value. *)
-  let end_value = Int64.logand end_value value_mask in
-  (* Now we need to get the number of bytes to shift.*)
-  let shift = t.bitsI - shfit_bits in
-  (* now we have the higher order bit. *)
-  let end_value = Int64.shift_left end_value shift in
-  Int64.logor end_value value
+  if start = end_ then
+    value
+  else 
+    (* Now we need to get the mask for the reminder. If the remainder is 0 the value mask is zero.
+    All the other operations below will not do anything due to it being 0. *)
+    let value_mask = Int64.shift_left 1L shfit_bits in
+    let value_mask = Int64.sub value_mask 1L in
+    (* Get the end value.*)
+    let end_value = A.get t.values end_ in
+    (* We got the last part of the value. *)
+    let end_value = Int64.logand end_value value_mask in
+    (* Now we need to get the number of bytes to shift.*)
+    let shift = t.bitsI - shfit_bits in
+    (* now we have the higher order bit. *)
+    let end_value = Int64.shift_left end_value shift in
+    Int64.logor end_value value
+
+let write t pos new_value =
+  let module A = Bigarray.Array1 in
+  (* Get the positions we need to write to. *)
+  let (start, reminder) = start t pos in
+  (* Create the mask.  If it runs off we will handle it later. *)
+  let mask = Int64.shift_left t.mask reminder in
+  (* Zero out the position.  Minus one will be all 1s. *)
+  let zero = Int64.logxor Int64.minus_one mask in
+  (* Used to get the value at a positioo. *)
+  let old_value = A.get t.values start in
+  (* Shift the value to the new position. *)
+  let new_updated = Int64.shift_left new_value reminder in
+  (* Zero out the position.  *)
+  let old_value = Int64.logand zero old_value in
+  (* Update the value with the new one at that position. *)
+  let new_updated = Int64.logor new_updated old_value in
+  (* The the value. *)
+  A.set t.values start new_updated;
+  (* Figure out the end position. *)
+  let (end_, shift_bits) = end_ t start reminder in
+  if start = end_ then
+    ()
+  else
+    (* Get the number of bits we need to shfit to. *)
+    let fix = t.bitsI - shift_bits in
+    (* Create a new mask for the front part of the position. *)
+    let newMask = Int64.shift_left 1L fix in
+    (* Need to subtract 1 to get the 1s we need at that positio. *)
+    let newMask = Int64.sub newMask 1L in
+    (* Create the amsk to zero out the position. *)
+    let zero_position = Int64.logxor Int64.minus_one newMask in
+    (* Get the old value we need to update.  *)
+    let old_value = A.get t.values end_ in
+    (* Shft the bits to the right of the hnew value to only expose the ones we want to overwrite. *)
+    let new_updated = Int64.shift_right new_value fix in
+    (* And it wil the zero value to 0 out the position we are about to update. *)
+    let old_value = Int64.logand old_value zero_position in
+    (* Create the new value with the logical or. *)
+    let new_updated = Int64.logor old_value new_updated in
+    (* Now we have the value so update it. *)
+    A.set t.values end_ new_updated;
+    ()
