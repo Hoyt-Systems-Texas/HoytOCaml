@@ -26,3 +26,11 @@ val read: t -> int64 -> int64
 @param pos The position to write the value to.
 @param value The value to write at that position. *)
 val write: t -> int64 -> int64 -> unit
+
+(** Does a binary search on the bit stream.  The bit store must be ordered and does suupport
+ duplicate values.
+@param t The bit store to perform the binary stream on.
+@param val The value to search for.
+@param increments The increments to search the btrere for.
+@returns The position of the value found. *)
+val binary_search: t -> int64 -> int64 -> int64 option

@@ -8,6 +8,7 @@ type t = {
   bitsI: int;
   length: int;
   size: int;
+  sizeL: int64;
   values: (int64, Bigarray.int64_elt, Bigarray.c_layout) Bigarray.Array1.t;
 }
 
@@ -32,6 +33,7 @@ let make size bits =
     bitsI=Int64.to_int bits;
     length;
     size=Int64.to_int size;
+    sizeL=size;
     values;
   }
 
@@ -59,6 +61,7 @@ let end_ t start reminder =
   (end_position, reminder)
 
 let read t pos =
+  (assert (pos < t.sizeL));
   let module A = Bigarray.Array1 in
   let (start, remainder) = start t pos in
   (* Create the maks for the value for the first value. *)
@@ -90,6 +93,7 @@ let read t pos =
     Int64.logor end_value value
 
 let write t pos new_value =
+  (assert (pos < t.sizeL));
   let module A = Bigarray.Array1 in
   (* Get the positions we need to write to. *)
   let (start, reminder) = start t pos in
@@ -131,3 +135,52 @@ let write t pos new_value =
     (* Now we have the value so update it. *)
     A.set t.values end_ new_updated;
     ()
+
+(** Calculates the middle for a binary search. 
+@param start The starting index.
+@param end The ending index. *)
+let calculate_middle start end_ =
+  let range = Int64.sub end_ start in
+  let middle = Int64.div range 2L in
+  Int64.add middle start
+
+let binary_search t value increments =
+  let search_length = Int64.div t.sizeL increments in
+  let rec search start_idx end_idx pos =
+    let current_value = read t (Int64.mul pos increments) in
+    if value > current_value then
+      (* We know at that position the value isn't there so add 1.*)
+      let start_idx = Int64.add pos 1L in
+      let pos = calculate_middle start_idx end_idx in
+      (* Check to see if we we are done search. *)
+      if pos >= end_idx then 
+        pos
+      else
+        search start_idx end_idx pos
+    else if value < current_value then
+      (* We know the value isn't at that position so we can subtract 1 off of the end.*)
+      let end_idx = Int64.sub pos 1L in
+      let pos = calculate_middle start_idx end_idx in
+      (* Check to see if the position is equal are less than.  Then we didn't find the value. *)
+      if pos <= start_idx then
+        pos
+      else
+        search start_idx end_idx pos
+    else
+      (* Values is equal to so we need to use it at the end. *)
+      let end_idx = pos in
+      let pos = calculate_middle start_idx end_idx in
+      if pos >= end_idx then
+        pos
+      else 
+        search start_idx end_idx pos
+      in
+  (* Calcualte the ending idx. *)
+  let end_idx = (Int64.sub search_length 1L) in
+  (* Now perform the binary search. *)
+  let result_idx = search 0L (Int64.sub search_length 1L) (calculate_middle 0L end_idx) in
+  let result_value = read t result_idx in
+  if result_value = value then
+    Some result_idx
+  else 
+    None
