@@ -25,4 +25,3 @@ let to_power_of_2 i =
     Some(i)
   else
     Some(next_power i)
-        
