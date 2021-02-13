@@ -61,7 +61,6 @@ let find_ t id =
         if value = id then
           let value_pos = Int64.add pos 1L in
           let v2 = Bit_store.read t.edges value_pos |> Int64.to_int in
-          let v2 = Array.unsafe_get t.id_to_vertex v2 in
           let next_pos = Int64.add pos 2L in
           find_vertexes next_pos (v2::values)
         else
@@ -74,8 +73,30 @@ let find t vertex =
   match Hashtbl.find_opt t.vertex_to_id vertex with
   | Some id ->  
     find_ t id
+    |> List.map (fun id -> Array.unsafe_get t.id_to_vertex id)
   | None ->
     []
 
-let bfs _t _v1 _v2 =
-  None
+let bfs t v1 v2 =
+  match ((Hashtbl.find_opt t.vertex_to_id v1), (Hashtbl.find_opt t.vertex_to_id v2)) with
+  | (Some(start), Some(end_)) -> 
+    if start = end_ then
+      Some [v1]
+    else
+      let previous_nodes = Hashtbl.create 12 in
+      let vertexes = Queue.create () in
+      let start_vec = Bit_store.create_new t.edges 1 in
+      Bit_store.write start_vec 0L start;
+      Hashtbl.add previous_nodes start true;
+      Queue.add (0L, start_vec) vertexes;
+      let search () =
+        match Queue.take_opt vertexes with
+        | Some (pos, path) -> 
+          let current_node = Bit_store.read path pos in
+          (* Now we need to get the related nodes and add them to the queue.*)
+          let _related = find_ t current_node in
+          None
+        | _ -> None
+      in
+      search ()
+  | _ -> None

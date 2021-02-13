@@ -204,3 +204,6 @@ let clone t new_size =
     in
   copy_values 0L;
   bit_store
+
+let create_new t size =
+  make t.bits size
