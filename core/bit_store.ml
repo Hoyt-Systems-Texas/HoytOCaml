@@ -92,6 +92,12 @@ let read t pos =
     let end_value = Int64.shift_left end_value shift in
     Int64.logor end_value value
 
+let read_opt t pos =
+  if pos < t.sizeL then
+    read t pos |> Some
+  else
+    None
+
 let write t pos new_value =
   (assert (pos < t.sizeL));
   let module A = Bigarray.Array1 in
@@ -179,8 +185,9 @@ let binary_search t value increments =
   let end_idx = (Int64.sub search_length 1L) in
   (* Now perform the binary search. *)
   let result_idx = search 0L (Int64.sub search_length 1L) (calculate_middle 0L end_idx) in
-  let result_value = read t result_idx in
+  let value_idx = Int64.mul result_idx increments in
+  let result_value = read t value_idx in
   if result_value = value then
-    Some result_idx
+    Some value_idx
   else 
     None

@@ -21,6 +21,12 @@ val length: t -> int
 @returns The value at the position. *)
 val read: t -> int64 -> int64
 
+(** Reads in a value at a position.
+@param t The bit store containing the information.
+@param pos The position to read in.
+@returns The value at that position or none. *)
+val read_opt: t -> int64 -> int64 option
+
 (** writes a value at the position.
 @param t The bit store to update with theh new value.
 @param pos The position to write the value to.

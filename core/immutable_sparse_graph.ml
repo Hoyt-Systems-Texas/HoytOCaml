@@ -34,10 +34,13 @@ let make edges default_edge =
     let _last_id  = List.fold_left (fun pos (v1, v2) ->
       match (Hashtbl.find_opt vertex_to_id v1, Hashtbl.find_opt vertex_to_id v2) with
       | (Some(v1), Some(v2)) ->
+        (* Write the first edge at that position.*)
         Bit_store.write bit_store pos v1;
+        (* Get the ending vector at that position.*)
         let pos = Int64.add 1L pos in
         Bit_store.write bit_store pos v2;
-        pos
+        (* Got to the next pair.*)
+        Int64.add pos 1L
       | _ -> pos
       ) 0L edges in
     Some {
@@ -48,3 +51,28 @@ let make edges default_edge =
       key_count = Int64.to_int key_count;
     }
   | None -> None
+
+let find_ t id =
+  match Bit_store.binary_search t.edges id 2L with
+  | Some pos -> 
+    let rec find_vertexes pos values =
+      match Bit_store.read_opt t.edges pos with
+      | Some value ->
+        if value = id then
+          let value_pos = Int64.add pos 1L in
+          let v2 = Bit_store.read t.edges value_pos |> Int64.to_int in
+          let v2 = Array.unsafe_get t.id_to_vertex v2 in
+          let next_pos = Int64.add pos 2L in
+          find_vertexes next_pos (v2::values)
+        else
+          values |> List.rev
+      | None -> values |> List.rev in
+    find_vertexes pos []
+  | None -> []
+
+let find t vertex =
+  match Hashtbl.find_opt t.vertex_to_id vertex with
+  | Some id ->  
+    find_ t id
+  | None ->
+    []
