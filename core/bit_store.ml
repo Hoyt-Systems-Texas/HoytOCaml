@@ -191,3 +191,16 @@ let binary_search t value increments =
     Some value_idx
   else 
     None
+
+let clone t new_size =
+  let bit_store = make t.bits new_size in
+  let rec copy_values pos =
+    if pos < t.sizeL then
+      let value = read t pos in
+      write bit_store pos value;
+      copy_values (Int64.add pos 1L)
+    else
+      ()
+    in
+  copy_values 0L;
+  bit_store

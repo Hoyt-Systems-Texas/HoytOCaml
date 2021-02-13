@@ -13,5 +13,12 @@ val make: 'a edges list -> 'a -> 'a t option
 (** Used to find all of the edges.
 @param graph The sparse graph to search.
 @param vertex The vertex to find and get all of it's edges. 
-@return The list of vertexes that match. *)
+@return The list of vertexes that match with the starting edge. *)
 val find: 'a t -> 'a -> 'a list
+
+(** Does a breadth first search. 
+@param graph The graph to perform the search on.
+@param start-vertex The starting vertex to search for.
+@param end-vertex Thee ending vertex to stop at.
+@returns The path to the value. *)
+val bfs: 'a t -> 'a -> 'a -> 'a list option

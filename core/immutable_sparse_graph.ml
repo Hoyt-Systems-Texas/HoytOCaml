@@ -76,3 +76,6 @@ let find t vertex =
     find_ t id
   | None ->
     []
+
+let bfs _t _v1 _v2 =
+  None

@@ -40,3 +40,9 @@ val write: t -> int64 -> int64 -> unit
 @param increments The increments to search the btrere for.
 @returns The position of the value found. *)
 val binary_search: t -> int64 -> int64 -> int64 option
+
+(** Clones the bit store with the new size.
+@param t The bit store to clone.
+@param new_size The new size of the bit store.
+@returns The cloned bit store.*)
+val clone: t -> int -> t
