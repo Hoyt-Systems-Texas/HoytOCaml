@@ -56,8 +56,9 @@ let end_ t start reminder =
   let stop_position = reminder + t.bitsI in
   (* The left over bits at that position. *)
   let reminder = Int.logand stop_position 63 in
-  (* A trick to get if we need to add 1 to the postion.*)
+  (* Need to subtract by 1 to handle the 0 case. *)
   let stop_position = stop_position - 1 in
+  (* A trick to get if we need to add 1 to the postion.*)
   let end_position = start + (Int.shift_right_logical stop_position 6) in
   (end_position, reminder)
 
