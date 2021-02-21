@@ -27,7 +27,7 @@ let make edges default_edge =
     Array.set id_to_vertex (Int64.to_int value) key;
     id_to_vertex) vertex_to_id (Array.make (Int64.to_int key_count) default_edge) in
   (* Now we need to write the graph to the bit store. *)
-  match Pow.to_power_of_2 (Int32.of_int total_edges) with
+  match Pow.to_power_of_2 (Int64.to_int32 key_count) with
   | Some i ->
     let store_size = Int64.mul (Int64.of_int total_edges) 2L in
     let bit_store = Bit_store.make store_size (Int32.to_int i) in
@@ -80,22 +80,56 @@ let find t vertex =
 let bfs t v1 v2 =
   match ((Hashtbl.find_opt t.vertex_to_id v1), (Hashtbl.find_opt t.vertex_to_id v2)) with
   | (Some(start), Some(end_)) -> 
+    let end_int = Int64.to_int end_ in
     if start = end_ then
       Some [v1]
     else
       let previous_nodes = Hashtbl.create 12 in
       let vertexes = Queue.create () in
-      let start_vec = Bit_store.create_new t.edges 1 in
+      let start_vec = Bit_store.create_new t.edges 1L in
       Bit_store.write start_vec 0L start;
       Hashtbl.add previous_nodes start true;
       Queue.add (0L, start_vec) vertexes;
-      let search () =
+      let rec search () =
         match Queue.take_opt vertexes with
         | Some (pos, path) -> 
           let current_node = Bit_store.read path pos in
           (* Now we need to get the related nodes and add them to the queue.*)
-          let _related = find_ t current_node in
-          None
+          let related = find_ t current_node in
+          let rec check_related related =
+            match related with
+            | [] -> None
+            | head::rest -> 
+              if head = end_int then
+                Some head
+              else
+                let next_pos = Int64.add pos 1L in
+                let new_size = Int64.add next_pos 1L in
+                let new_store = Bit_store.clone path new_size in
+                Bit_store.write new_store next_pos (Int64.of_int head);
+                Queue.add (next_pos, new_store) vertexes;
+                check_related rest
+            in
+          (match check_related related with
+          | Some last -> 
+            let length = Bit_store.length path
+              |> Int64.of_int in
+            let rec output_path pos num_path =
+              if pos < length then
+                let next_value = Bit_store.read path pos in
+                output_path (Int64.add 1L pos) (next_value::num_path)
+              else
+                num_path
+              in
+            (output_path 0L [])
+            (* Get the output path values. *)
+            |> List.map (fun idx -> Array.get t.id_to_vertex (Int64.to_int idx))
+            (* Add the last node to the search *)
+            |> List.cons (Array.get t.id_to_vertex last)
+            (* Reverse the path. *)
+            |> List.rev 
+            |> Some
+          | None -> search ())
         | _ -> None
       in
       search ()

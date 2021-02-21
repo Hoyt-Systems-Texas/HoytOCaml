@@ -130,4 +130,56 @@ let%test_unit "Find the position of the values g." =
     [%test_eq: string list] path ["b";"a";"c";"d";];
   | None ->
     [%test_eq: bool] true false
+
+let%test_unit "Find the path of a to c" =
+  let edges = [
+    ("a", "b");
+    ("a", "d");
+    ("b", "c");
+    ("c", "f");
+    ("c", "a");
+    ("d", "c");
+    ("f", "d");
+    ("f", "a");
+    ("f", "c");
+    ("f", "b");
+    ("f", "g");
+    ("g", "b");
+    ("g", "a");
+    ("g", "c");
+    ("g", "d");
+  ] in
+  let graph = Immutable_sparse_graph.make edges "" in
+  match graph with
+  | Some graph ->
+    let path = Immutable_sparse_graph.bfs graph "a" "c" in
+    [%test_eq: string list option] path (Some ["a";"b";"c"]);
+  | None ->
+    [%test_eq: bool] true false
+
+let%test_unit "Find the path of b to g" =
+  let edges = [
+    ("a", "b");
+    ("a", "d");
+    ("b", "c");
+    ("c", "f");
+    ("c", "a");
+    ("d", "c");
+    ("f", "d");
+    ("f", "a");
+    ("f", "c");
+    ("f", "b");
+    ("f", "g");
+    ("g", "b");
+    ("g", "a");
+    ("g", "c");
+    ("g", "d");
+  ] in
+  let graph = Immutable_sparse_graph.make edges "" in
+  match graph with
+  | Some graph ->
+    let path = Immutable_sparse_graph.bfs graph "b" "g" in
+    [%test_eq: string list option] path (Some ["b";"c";"f";"g"]);
+  | None ->
+    [%test_eq: bool] true false
     

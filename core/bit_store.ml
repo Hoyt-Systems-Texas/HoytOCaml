@@ -38,7 +38,7 @@ let make size bits =
   }
 
 let length t =
-  t.length
+  t.size
 
 let start t pos =
   (* We need to calculate the starting position of the record value. *)
@@ -193,17 +193,17 @@ let binary_search t value increments =
     None
 
 let clone t new_size =
-  let bit_store = make t.bits new_size in
+  let new_store = make new_size t.bitsI  in
   let rec copy_values pos =
     if pos < t.sizeL then
       let value = read t pos in
-      write bit_store pos value;
+      write new_store pos value;
       copy_values (Int64.add pos 1L)
     else
       ()
     in
   copy_values 0L;
-  bit_store
+  new_store
 
 let create_new t size =
-  make t.bits size
+  make size t.bitsI

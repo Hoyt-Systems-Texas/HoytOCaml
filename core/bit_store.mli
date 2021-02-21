@@ -45,10 +45,10 @@ val binary_search: t -> int64 -> int64 -> int64 option
 @param t The bit store to clone.
 @param new_size The new size of the bit store.
 @returns The cloned bit store.*)
-val clone: t -> int -> t
+val clone: t -> int64 -> t
 
 (** Creates a new bit store with the same settings.
 @param t The bit store to copy the settings for.
 @param size The size of the bit store.
 @returns The new bit store. *)
-val create_new: t -> int -> t
+val create_new: t -> int64 -> t
