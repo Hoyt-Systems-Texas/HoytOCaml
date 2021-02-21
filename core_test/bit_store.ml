@@ -52,3 +52,11 @@ let%test_unit "read and write test" =
   [%test_eq: int64 option] (Bit_store.binary_search bit_store 5L 1L) (Some 4L);
   [%test_eq: int64 option] (Bit_store.binary_search bit_store 11L 1L) (Some 9L);
   [%test_eq: int64 option] (Bit_store.binary_search bit_store 12L 1L) None
+
+ let%test_unit "Even error" =
+  let bit_store = Bit_store.make 4L 16 in
+  Bit_store.write bit_store 0L 1L;
+  Bit_store.write bit_store 1L 2L;
+  Bit_store.write bit_store 2L 3L;
+  Bit_store.write bit_store 3L 4L;
+  [%test_eq: int64] (Bit_store.read bit_store 3L) 4L;

@@ -19,11 +19,7 @@ let make size bits =
   let total_bits = Int64.mul bits size in
   let total_size = Int64.div total_bits 64L in
   (* If the value gets cut off we need on more long to cover the span. *)
-  let reminder = Int64.logand pos_mask total_bits in
-  let length = (if reminder > 0L then
-    Int64.add total_size  1L
-  else
-    total_size)
+  let length = Int64.add total_size  1L
   |> Int64.to_int
   in
   let values = Bigarray.Array1.create Bigarray.Int64 Bigarray.c_layout length in
@@ -57,7 +53,7 @@ let end_ t start reminder =
   (* The left over bits at that position. *)
   let reminder = Int.logand stop_position 63 in
   (* A trick to get if we need to add 1 to the postion.*)
-  let end_position = start + Int.shift_right_logical stop_position 6 in
+  let end_position = start + (Int.shift_right_logical stop_position 6) in
   (end_position, reminder)
 
 let read t pos =
