@@ -161,7 +161,7 @@ let binary_search t value increments =
       let start_idx = Int64.add pos 1L in
       let pos = calculate_middle start_idx end_idx in
       (* Check to see if we we are done search. *)
-      if pos >= end_idx then 
+      if start_idx >= end_idx then 
         pos
       else
         search start_idx end_idx pos
@@ -170,7 +170,7 @@ let binary_search t value increments =
       let end_idx = Int64.sub pos 1L in
       let pos = calculate_middle start_idx end_idx in
       (* Check to see if the position is equal are less than.  Then we didn't find the value. *)
-      if pos <= start_idx then
+      if start_idx >= end_idx then
         pos
       else
         search start_idx end_idx pos
@@ -178,7 +178,7 @@ let binary_search t value increments =
       (* Values is equal to so we need to use it at the end. *)
       let end_idx = pos in
       let pos = calculate_middle start_idx end_idx in
-      if pos >= end_idx then
+      if start_idx >= end_idx then
         pos
       else 
         search start_idx end_idx pos
