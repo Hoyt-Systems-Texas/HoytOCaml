@@ -1,0 +1,6 @@
+(library (name Hoyt_database)
+  (libraries core
+             lwt
+             caqti
+             caqti-lwt)
+  (preprocess (pps ppx_jane ppx_inline_test ppx_compare)))
